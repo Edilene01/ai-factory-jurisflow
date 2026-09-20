@@ -1,0 +1,336 @@
+{
+  "name": "JurisFlow - Case Intake Router v0.2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "intake",
+        "responseMode": "onReceived",
+        "responseData": "allEntries",
+        "options": {
+          "rawBody": false
+        },
+        "authentication": "headerAuth",
+        "headerAuth": {
+          "name": "X-Jurisflow-Signature",
+          "value": "<<REMOVIDO-NA-ADOCAO>>"
+        }
+      },
+      "id": "a1b2c3d4-1111-4aaa-aaaa-111111111111",
+      "name": "Webhook Site Form",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 320],
+      "webhookId": "jurisflow-case-intake-prod"
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "operation": "create",
+        "model": "gpt-5.4-mini",
+        "apiKey": "<<REMOVIDO-NA-ADOCAO>>",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Você é um classificador de triagem de casos jurídicos da JurisFlow (legaltech que atende escritórios de advocacia de médio porte no Brasil). Receba a descrição do caso enviado pelo formulário do site e responda APENAS com um objeto JSON válido, sem markdown, sem ```json, sem texto extra, no formato exato:\n{\"area\": \"<AREA>\", \"urgencia\": \"<URGENCIA>\"}\n\nValores permitidos para area (use exatamente estes, com acento e maiúscula inicial): Trabalhista, Cível, Tributário, Criminal, Consumidor.\nValores permitidos para urgencia: alta, média, baixa.\n\nDefinições de área:\n- Trabalhista: vínculo empregatício, demissão, horas extras, rescisão, assédio no trabalho, FGTS, verbas.\n- Cível: contratos, família, divórcio, inventário, indenização, vizinhança, imobiliário, danos morais entre particulares.\n- Tributário: impostos, multas da Receita, ICMS, ISS, parcelamento de débito fiscal, execução fiscal.\n- Criminal: crime, prisão, inquérito, flagrante, ameaça, lesão corporal, defesa penal.\n- Consumidor: produto/serviço com defeito, cobrança indevida de empresa, banco, plano de saúde, telefonia, garantia.\n\nUrgência alta: prazo legal vencendo, prisão, audiência marcada, risco iminente. Urgência baixa: dúvida genérica, sem prazo."
+            },
+            {
+              "role": "user",
+              "content": "={{$json.body.descricao_caso}}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.1,
+          "maxTokens": 40,
+          "timeout": 30000
+        }
+      },
+      "id": "b2c3d4e5-2222-4bbb-bbbb-222222222222",
+      "name": "OpenAI Classificar",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [480, 320],
+      "credentials": {
+        "openAiApi": {
+          "id": "1",
+          "name": "OpenAI Téo (pessoal - ROTACIONAR!)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Téo: parseia o JSON que o GPT devolveu e separa area + urgencia.\n// FIXME: sem try/catch. Se o modelo devolver markdown ou texto a mais, isso explode.\nconst raw = $json.message.content;\nconst parsed = JSON.parse(raw);\nreturn [{\n  json: {\n    area: parsed.area,\n    urgencia: parsed.urgencia,\n    nome_cliente: $node[\"Webhook Site Form\"].json.body.nome_cliente,\n    cpf: $node[\"Webhook Site Form\"].json.body.cpf,\n    email: $node[\"Webhook Site Form\"].json.body.email,\n    descricao_caso: $node[\"Webhook Site Form\"].json.body.descricao_caso\n  }\n}];"
+      },
+      "id": "c3d4e5f6-3333-4ccc-cccc-333333333333",
+      "name": "Parse Classificação",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 320]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{$json.area}}",
+        "rules": {
+          "rules": [
+            {
+              "operation": "equal",
+              "value2": "Trabalhista",
+              "output": 0
+            },
+            {
+              "operation": "equal",
+              "value2": "Cível",
+              "output": 1
+            },
+            {
+              "operation": "equal",
+              "value2": "Tributário",
+              "output": 2
+            },
+            {
+              "operation": "equal",
+              "value2": "Criminal",
+              "output": 3
+            },
+            {
+              "operation": "equal",
+              "value2": "Consumidor",
+              "output": 4
+            }
+          ]
+        },
+        "fallbackOutput": 1
+      },
+      "id": "d4e5f6a7-4444-4ddd-dddd-444444444444",
+      "name": "Switch Área",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [980, 320]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "#juris-trabalhista",
+        "text": "=:briefcase: *Novo caso — Trabalhista* (urgência: {{$json.urgencia}})\nCliente: {{$json.nome_cliente}}  |  CPF: {{$json.cpf}}\n>>> {{$json.descricao_caso}}",
+        "otherOptions": {
+          "link_names": true
+        }
+      },
+      "id": "e5f6a7b8-5555-4eee-eeee-555555555555",
+      "name": "Slack #juris-trabalhista",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1240, 80],
+      "credentials": {
+        "slackApi": {
+          "id": "2",
+          "name": "Slack JurisFlow Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "#juris-civel",
+        "text": "=:scales: *Novo caso — Cível* (urgência: {{$json.urgencia}})\nCliente: {{$json.nome_cliente}}  |  CPF: {{$json.cpf}}\n>>> {{$json.descricao_caso}}",
+        "otherOptions": {
+          "link_names": true
+        }
+      },
+      "id": "f6a7b8c9-6666-4fff-ffff-666666666666",
+      "name": "Slack #juris-civel",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1240, 220],
+      "credentials": {
+        "slackApi": {
+          "id": "2",
+          "name": "Slack JurisFlow Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "#juris-tributario",
+        "text": "=:bank: *Novo caso — Tributário* (urgência: {{$json.urgencia}})\nCliente: {{$json.nome_cliente}}  |  CPF: {{$json.cpf}}\n>>> {{$json.descricao_caso}}",
+        "otherOptions": {
+          "link_names": true
+        }
+      },
+      "id": "a7b8c9d0-7777-4aaa-bbbb-777777777777",
+      "name": "Slack #juris-tributario",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1240, 360],
+      "credentials": {
+        "slackApi": {
+          "id": "2",
+          "name": "Slack JurisFlow Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "#juris-criminal",
+        "text": "=:rotating_light: *Novo caso — Criminal (PRIORIDADE)* (urgência: {{$json.urgencia}})\nCliente: {{$json.nome_cliente}}  |  CPF: {{$json.cpf}}\n>>> {{$json.descricao_caso}}\n\ncc <!subteam^S0PENAL>",
+        "otherOptions": {
+          "link_names": true
+        }
+      },
+      "id": "b8c9d0e1-8888-4bbb-cccc-888888888888",
+      "name": "Slack #juris-criminal",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1240, 500],
+      "credentials": {
+        "slackApi": {
+          "id": "2",
+          "name": "Slack JurisFlow Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "#juris-consumidor",
+        "text": "=:shopping_trolley: *Novo caso — Consumidor* (urgência: {{$json.urgencia}})\nCliente: {{$json.nome_cliente}}  |  CPF: {{$json.cpf}}\n>>> {{$json.descricao_caso}}",
+        "otherOptions": {
+          "link_names": true
+        }
+      },
+      "id": "c9d0e1f2-9999-4ccc-dddd-999999999999",
+      "name": "Slack #juris-consumidor",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1240, 640],
+      "credentials": {
+        "slackApi": {
+          "id": "2",
+          "name": "Slack JurisFlow Bot"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "d0e1f2a3-aaaa-4ddd-eeee-aaaaaaaaaaaa",
+      "name": "Audit (TODO Postgres/Airtable)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [980, 700]
+    }
+  ],
+  "connections": {
+    "Webhook Site Form": {
+      "main": [
+        [
+          {
+            "node": "OpenAI Classificar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Classificar": {
+      "main": [
+        [
+          {
+            "node": "Parse Classificação",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Classificação": {
+      "main": [
+        [
+          {
+            "node": "Switch Área",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Audit (TODO Postgres/Airtable)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Área": {
+      "main": [
+        [
+          {
+            "node": "Slack #juris-trabalhista",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slack #juris-civel",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slack #juris-tributario",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slack #juris-criminal",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slack #juris-consumidor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "v0.2.0",
+  "id": "jurisflow-case-intake",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "owner": "<<REMOVIDO-NA-ADOCAO>>",
+    "lastUpdated": "2026-02-19T22:08:53.000Z",
+    "notes": "v0.2 - adicionado canal Consumidor + parse de urgência. TODO trocar minha API key da OpenAI (tá no JSON, eu sei) e o webhook secret. Audit ainda é NoOp, prometo plugar no Postgres."
+  },
+  "tags": [
+    {
+      "name": "prod",
+      "id": "1"
+    },
+    {
+      "name": "case-intake",
+      "id": "2"
+    }
+  ]
+}
