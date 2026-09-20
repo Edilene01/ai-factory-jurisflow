@@ -1,0 +1,102 @@
+name: CI/CD
+
+# Push em main publica em produção. Push em develop publica em desenvolvimento.
+# Os dois ambientes são GitHub Environments distintos, cada um com o seu conjunto
+# de secrets, de modo que nenhuma credencial de produção fica visível para o outro.
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qualidade:
+    name: Qualidade e antivazamento
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Varredura de segredos com gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validar estrutura do workflow
+        run: python tests/validate_workflow.py
+
+      - name: Testes de roteamento com LLM mockado
+        run: |
+          pip install --quiet pytest
+          python -m pytest tests/test_routing.py -v
+
+  deploy-desenvolvimento:
+    name: Deploy em desenvolvimento
+    needs: qualidade
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: desenvolvimento
+      url: ${{ vars.N8N_PUBLIC_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Publicar workflow no n8n de desenvolvimento
+        env:
+          N8N_PUBLIC_URL: ${{ vars.N8N_PUBLIC_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: python scripts/deploy_workflow.py
+
+      - name: Smoke tests
+        env:
+          N8N_PUBLIC_URL: ${{ vars.N8N_PUBLIC_URL }}
+          JURISFLOW_WEBHOOK_SECRET: ${{ secrets.JURISFLOW_WEBHOOK_SECRET }}
+        run: bash tests/smoke/run_all.sh
+
+  deploy-producao:
+    name: Deploy em produção
+    needs: qualidade
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: producao
+      url: ${{ vars.N8N_PUBLIC_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Publicar workflow no n8n de produção
+        env:
+          N8N_PUBLIC_URL: ${{ vars.N8N_PUBLIC_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: python scripts/deploy_workflow.py
+
+      - name: Smoke tests contra a URL pública
+        env:
+          N8N_PUBLIC_URL: ${{ vars.N8N_PUBLIC_URL }}
+          JURISFLOW_WEBHOOK_SECRET: ${{ secrets.JURISFLOW_WEBHOOK_SECRET }}
+        run: bash tests/smoke/run_all.sh
+
+      - name: Registrar versão publicada
+        run: |
+          echo "Publicado $(git rev-parse --short HEAD) em produção" >> $GITHUB_STEP_SUMMARY
+          python -c "import json;print('Versão do workflow:', json.load(open('workflows/jurisflow-intake.json'))['versionId'])" >> $GITHUB_STEP_SUMMARY

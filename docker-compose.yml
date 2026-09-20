@@ -1,0 +1,41 @@
+# Espelho local do JurisFlow Case Intake, para desenvolver e testar sem tocar em
+# produção. A versão da imagem é fixada de propósito, porque :latest já quebrou o
+# login uma vez. A porta sai apenas no loopback, de modo que o editor não fica
+# exposto na rede local.
+#
+# Todos os valores sensíveis vêm do arquivo .env, que não é versionado.
+
+services:
+  n8n:
+    image: n8nio/n8n:2.28.7
+    container_name: jurisflow-n8n
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:5678:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-America/Sao_Paulo}
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - N8N_PERSONALIZATION_ENABLED=false
+      - N8N_PUBLIC_API_DISABLED=false
+      - EXECUTIONS_DATA_SAVE_ON_SUCCESS=none
+      - EXECUTIONS_DATA_SAVE_ON_ERROR=all
+      - EXECUTIONS_DATA_SAVE_MANUAL_EXECUTIONS=false
+      - EXECUTIONS_DATA_MAX_AGE=72
+      - EXECUTIONS_DATA_PRUNE=true
+    volumes:
+      - n8n_data:/home/node/.n8n
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:5678/healthz || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  n8n_data:

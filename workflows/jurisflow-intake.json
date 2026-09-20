@@ -1,0 +1,495 @@
+{
+  "name": "JurisFlow - Case Intake Router v1.0",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "intake",
+        "responseMode": "responseNode",
+        "authentication": "headerAuth",
+        "options": {
+          "rawBody": false
+        }
+      },
+      "id": "wh-intake",
+      "name": "Webhook Site Form",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        240,
+        340
+      ],
+      "webhookId": "jurisflow-case-intake",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "JurisFlow Webhook Signature"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normaliza o payload do formulário, gera o protocolo e prepara DUAS versões da\n// descrição: a íntegra, que segue para o canal do time responsável, e a sanitizada,\n// que é a única enviada ao provedor de LLM.\nconst body = $json.body || {};\n\nconst obrigatorios = ['nome_cliente', 'cpf', 'descricao_caso'];\nconst faltando = obrigatorios.filter((c) => !body[c]);\nif (faltando.length) {\n  throw new Error('Campos obrigatorios ausentes no intake: ' + faltando.join(', '));\n}\n\nconst soDigitos = (v) => String(v || '').replace(/\\D/g, '');\n\nfunction mascararCpf(cpf) {\n  const d = soDigitos(cpf);\n  if (d.length !== 11) return '***.***.***-**';\n  return '***.***.***-' + d.slice(9);\n}\n\nfunction mascararNome(nome) {\n  const partes = String(nome).trim().split(/\\s+/).filter(Boolean);\n  const primeiro = partes.shift() || '';\n  const iniciais = partes.map((p) => p.charAt(0).toUpperCase() + '.');\n  return [primeiro].concat(iniciais).join(' ');\n}\n\nfunction sanitizarTexto(txt) {\n  return String(txt || '')\n    .replace(/\\b\\d{2}\\.?\\d{3}\\.?\\d{3}\\/?\\d{4}-?\\d{2}\\b/g, '[CNPJ]')\n    .replace(/\\b\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d{2}\\b/g, '[CPF]')\n    .replace(/[\\w.+-]+@[\\w-]+\\.[\\w.]{2,}/g, '[EMAIL]')\n    .replace(/\\(?\\d{2}\\)?\\s?9?\\d{4}-?\\d{4}/g, '[TELEFONE]');\n}\n\nconst agora = new Date();\nconst carimbo = agora.toISOString().slice(0, 10).replace(/-/g, '');\nconst sufixo = Math.random().toString(36).slice(2, 8).toUpperCase();\n\nreturn [{\n  json: {\n    protocolo: 'JF-' + carimbo + '-' + sufixo,\n    recebido_em: agora.toISOString(),\n    nome_mascarado: mascararNome(body.nome_cliente),\n    cpf_mascarado: mascararCpf(body.cpf),\n    descricao_caso: body.descricao_caso,\n    descricao_sanitizada: sanitizarTexto(body.descricao_caso),\n    origem: body.origem || 'desconhecida',\n  },\n}];"
+      },
+      "id": "sanitizar",
+      "name": "Sanitizar Entrada",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "operation": "create",
+        "model": "={{ $env.OPENAI_MODEL }}",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Você é um classificador de triagem de casos jurídicos da JurisFlow. Receba a descrição do caso, já sanitizada de dados identificáveis, e responda APENAS com um objeto JSON válido, sem markdown, no formato exato:\n{\"area\": \"<AREA>\", \"urgencia\": \"<URGENCIA>\"}\n\nValores permitidos para area: Trabalhista, Cível, Tributário, Criminal, Consumidor.\nValores permitidos para urgencia: alta, media, baixa.\n\nDefinições de área:\n- Trabalhista: vínculo empregatício, demissão, horas extras, rescisão, assédio no trabalho, FGTS, verbas.\n- Cível: contratos, família, divórcio, inventário, indenização, vizinhança, imobiliário, danos morais entre particulares.\n- Tributário: impostos, multas da Receita, ICMS, ISS, parcelamento de débito fiscal, execução fiscal.\n- Criminal: crime, prisão, inquérito, flagrante, ameaça, lesão corporal, defesa penal.\n- Consumidor: produto ou serviço com defeito, cobrança indevida de empresa, banco, plano de saúde, telefonia, garantia.\n\nUrgência alta: prazo legal vencendo, prisão, audiência marcada, risco iminente. Urgência baixa: dúvida genérica, sem prazo.\nSe a descrição não permitir classificar com segurança, devolva area com o valor \"Indefinido\"."
+            },
+            {
+              "role": "user",
+              "content": "={{ $json.descricao_sanitizada }}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0,
+          "maxTokens": 60,
+          "timeout": 30000
+        }
+      },
+      "id": "llm-classificar",
+      "name": "OpenAI Classificar",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        680,
+        340
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "",
+          "name": "OpenAI JurisFlow"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Le a resposta do modelo com tolerancia a markdown e a texto extra, normaliza a\n// area para uma chave canonica e marca para revisao manual tudo que nao for\n// reconhecido, em vez de deixar cair em um canal qualquer sem aviso.\nconst CANONICAS = {\n  trabalhista: 'Trabalhista',\n  civel: 'Cível',\n  tributario: 'Tributário',\n  criminal: 'Criminal',\n  consumidor: 'Consumidor',\n};\n\nconst SINONIMOS = {\n  'direito do trabalho': 'trabalhista',\n  trabalho: 'trabalhista',\n  'direito civil': 'civel',\n  civil: 'civel',\n  familia: 'civel',\n  'direito tributario': 'tributario',\n  tributos: 'tributario',\n  fiscal: 'tributario',\n  'direito penal': 'criminal',\n  penal: 'criminal',\n  crime: 'criminal',\n  'direito do consumidor': 'consumidor',\n  consumo: 'consumidor',\n  cdc: 'consumidor',\n};\n\nconst URGENCIAS = ['alta', 'media', 'baixa'];\n\nfunction normalizar(valor) {\n  return String(valor || '')\n    .normalize('NFD')\n    .replace(/[̀-ͯ]/g, '')\n    .toLowerCase()\n    .trim();\n}\n\nfunction extrairJson(bruto) {\n  const limpo = String(bruto || '').replace(/```json/gi, '').replace(/```/g, '').trim();\n  const inicio = limpo.indexOf('{');\n  const fim = limpo.lastIndexOf('}');\n  if (inicio === -1 || fim === -1) {\n    throw new Error('resposta do modelo sem objeto JSON reconhecivel');\n  }\n  return JSON.parse(limpo.slice(inicio, fim + 1));\n}\n\nconst entrada = $('Sanitizar Entrada').first().json;\nconst bruto = $json.message ? $json.message.content : ($json.content || '');\n\nlet areaChave = null;\nlet urgencia = 'media';\nlet revisaoManual = false;\nlet motivo = '';\n\ntry {\n  if ($json.error) {\n    throw new Error('provedor retornou erro: ' + JSON.stringify($json.error).slice(0, 200));\n  }\n  const dados = extrairJson(bruto);\n  const areaNormalizada = normalizar(dados.area);\n  areaChave = CANONICAS[areaNormalizada] ? areaNormalizada : (SINONIMOS[areaNormalizada] || null);\n\n  const urgenciaNormalizada = normalizar(dados.urgencia);\n  urgencia = URGENCIAS.indexOf(urgenciaNormalizada) >= 0 ? urgenciaNormalizada : 'media';\n\n  if (!areaChave) {\n    revisaoManual = true;\n    motivo = 'area nao reconhecida: ' + String(dados.area).slice(0, 60);\n  }\n} catch (erro) {\n  revisaoManual = true;\n  motivo = 'falha ao interpretar a classificacao: ' + erro.message;\n}\n\nconst latencia = Date.now() - new Date(entrada.recebido_em).getTime();\n\nreturn [{\n  json: {\n    protocolo: entrada.protocolo,\n    recebido_em: entrada.recebido_em,\n    latencia_ms: latencia,\n    area_chave: areaChave || 'triagem_manual',\n    area: areaChave ? CANONICAS[areaChave] : 'Triagem manual',\n    urgencia: urgencia,\n    revisao_manual: revisaoManual,\n    motivo_revisao: motivo,\n    nome_mascarado: entrada.nome_mascarado,\n    cpf_mascarado: entrada.cpf_mascarado,\n    descricao_caso: entrada.descricao_caso,\n    origem: entrada.origem,\n  },\n}];"
+      },
+      "id": "parse",
+      "name": "Parse Classificação",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'recebido', protocolo: $json.protocolo, area: $json.area, urgencia: $json.urgencia, revisao_manual: $json.revisao_manual }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "responder",
+      "name": "Responder Intake",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.revisao_manual }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "if-revisao",
+      "name": "Precisa de Revisão Manual?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.area_chave }}",
+        "rules": {
+          "rules": [
+            {
+              "operation": "equal",
+              "value2": "trabalhista",
+              "output": 0
+            },
+            {
+              "operation": "equal",
+              "value2": "civel",
+              "output": 1
+            },
+            {
+              "operation": "equal",
+              "value2": "tributario",
+              "output": 2
+            },
+            {
+              "operation": "equal",
+              "value2": "criminal",
+              "output": 3
+            },
+            {
+              "operation": "equal",
+              "value2": "consumidor",
+              "output": 4
+            }
+          ]
+        },
+        "fallbackOutput": "none"
+      },
+      "id": "switch-area",
+      "name": "Switch Área",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "#juris-trabalhista",
+        "text": "=:briefcase: *Novo caso – Trabalhista* (urgência: {{$json.urgencia}})\nProtocolo: {{$json.protocolo}}\nCliente: {{$json.nome_mascarado}}  |  CPF: {{$json.cpf_mascarado}}\n>>> {{$json.descricao_caso}}",
+        "otherOptions": {
+          "link_names": true
+        }
+      },
+      "id": "slack-juris-trabalhista",
+      "name": "Slack #juris-trabalhista",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        1500,
+        60
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "",
+          "name": "Slack JurisFlow Bot"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "#juris-civel",
+        "text": "=:scales: *Novo caso – Cível* (urgência: {{$json.urgencia}})\nProtocolo: {{$json.protocolo}}\nCliente: {{$json.nome_mascarado}}  |  CPF: {{$json.cpf_mascarado}}\n>>> {{$json.descricao_caso}}",
+        "otherOptions": {
+          "link_names": true
+        }
+      },
+      "id": "slack-juris-civel",
+      "name": "Slack #juris-civel",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        1500,
+        200
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "",
+          "name": "Slack JurisFlow Bot"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "#juris-tributario",
+        "text": "=:bank: *Novo caso – Tributário* (urgência: {{$json.urgencia}})\nProtocolo: {{$json.protocolo}}\nCliente: {{$json.nome_mascarado}}  |  CPF: {{$json.cpf_mascarado}}\n>>> {{$json.descricao_caso}}",
+        "otherOptions": {
+          "link_names": true
+        }
+      },
+      "id": "slack-juris-tributario",
+      "name": "Slack #juris-tributario",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        1500,
+        340
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "",
+          "name": "Slack JurisFlow Bot"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "#juris-criminal",
+        "text": "=:rotating_light: *Novo caso – Criminal (PRIORIDADE)* (urgência: {{$json.urgencia}})\nProtocolo: {{$json.protocolo}}\nCliente: {{$json.nome_mascarado}}  |  CPF: {{$json.cpf_mascarado}}\n>>> {{$json.descricao_caso}}\n\ncc <!subteam^S0PENAL>",
+        "otherOptions": {
+          "link_names": true
+        }
+      },
+      "id": "slack-juris-criminal",
+      "name": "Slack #juris-criminal",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        1500,
+        480
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "",
+          "name": "Slack JurisFlow Bot"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "#juris-consumidor",
+        "text": "=:shopping_trolley: *Novo caso – Consumidor* (urgência: {{$json.urgencia}})\nProtocolo: {{$json.protocolo}}\nCliente: {{$json.nome_mascarado}}  |  CPF: {{$json.cpf_mascarado}}\n>>> {{$json.descricao_caso}}",
+        "otherOptions": {
+          "link_names": true
+        }
+      },
+      "id": "slack-juris-consumidor",
+      "name": "Slack #juris-consumidor",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        1500,
+        620
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "",
+          "name": "Slack JurisFlow Bot"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "#juris-triagem-manual",
+        "text": "=:mag: *Caso sem classificação automática* (urgência presumida: {{$json.urgencia}})\nProtocolo: {{$json.protocolo}}\nMotivo: {{$json.motivo_revisao}}\nCliente: {{$json.nome_mascarado}}  |  CPF: {{$json.cpf_mascarado}}\n>>> {{$json.descricao_caso}}",
+        "otherOptions": {
+          "link_names": true
+        }
+      },
+      "id": "slack-triagem",
+      "name": "Slack #juris-triagem-manual",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        1500,
+        760
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "",
+          "name": "Slack JurisFlow Bot"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "// Registro de auditoria sem dado identificavel. Hoje o destino ainda e um sink em\n// memoria; a persistencia em Postgres entra na Etapa 2, e o formato do registro ja\n// esta fechado para que aquela mudanca seja so a troca do destino.\nconst d = $json;\nreturn [{\n  json: {\n    protocolo: d.protocolo,\n    recebido_em: d.recebido_em,\n    latencia_ms: d.latencia_ms,\n    area: d.area,\n    urgencia: d.urgencia,\n    revisao_manual: d.revisao_manual,\n    motivo_revisao: d.motivo_revisao,\n    origem: d.origem,\n    caracteres_descricao: String(d.descricao_caso || '').length,\n  },\n}];"
+      },
+      "id": "audit",
+      "name": "Registro de Auditoria",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        900
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Site Form": {
+      "main": [
+        [
+          {
+            "node": "Sanitizar Entrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sanitizar Entrada": {
+      "main": [
+        [
+          {
+            "node": "OpenAI Classificar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Classificar": {
+      "main": [
+        [
+          {
+            "node": "Parse Classificação",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Classificação": {
+      "main": [
+        [
+          {
+            "node": "Responder Intake",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Precisa de Revisão Manual?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Registro de Auditoria",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Precisa de Revisão Manual?": {
+      "main": [
+        [
+          {
+            "node": "Slack #juris-triagem-manual",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch Área",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Área": {
+      "main": [
+        [
+          {
+            "node": "Slack #juris-trabalhista",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slack #juris-civel",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slack #juris-tributario",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slack #juris-criminal",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slack #juris-consumidor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": false,
+    "saveManualExecutions": false,
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "all",
+    "executionTimeout": 120,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "v1.0.0",
+  "id": "jurisflow-case-intake",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [
+    {
+      "name": "case-intake",
+      "id": "1"
+    }
+  ]
+}
