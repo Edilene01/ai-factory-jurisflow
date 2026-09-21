@@ -4,7 +4,8 @@ Triagem automática de formulários de intake jurídico: recebe o caso, classifi
 urgência, devolve um protocolo ao cliente e entrega o caso ao time responsável no Slack,
 com a identidade do solicitante mascarada.
 
-**URL pública:** `<preencher com a URL do ambiente de produção>`
+**URL pública:** https://contatestes-01.app.n8n.cloud/webhook/intake
+**Estado da entrega:** ver [`docs/estado-da-entrega.md`](docs/estado-da-entrega.md), que registra o que está verificado e o que ainda não está
 **Status:** v1.0.0 · [CHANGELOG](CHANGELOG.md) · [Releases](../../releases)
 
 ---
