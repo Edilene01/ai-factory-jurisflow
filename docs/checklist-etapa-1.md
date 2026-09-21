@@ -4,6 +4,8 @@ Entrega na semana 6, em repositório público no perfil pessoal do GitHub. A col
 separa o que já está escrito do que depende de execução em ambiente real, porque a rubrica
 distingue as duas coisas com clareza.
 
+> Estado detalhado e honesto da entrega: [`estado-da-entrega.md`](estado-da-entrega.md).
+
 ## Primeiro item: arquitetura e decisões documentadas (25%)
 
 | Exigência | Onde | Status |
@@ -19,16 +21,16 @@ distingue as duas coisas com clareza.
 
 | Exigência | Onde | Status |
 |---|---|---|
-| Repositório público no perfil pessoal | GitHub | Depende de você, ver `docs/publicacao-do-repositorio.md` |
-| URL pública funcional, independente da sua máquina | Railway | Depende de você |
-| Três smoke tests documentados e funcionando | `tests/smoke/` e `docs/smoke-tests.md` | Código pronto, falta rodar contra a URL |
-| Pipeline de CI/CD disparado por push na branch principal | `.github/workflows/ci-cd.yml` | Pronto, falta configurar secrets |
-| Ambientes de dev e prod separados, com secrets distintos | GitHub Environments e Railway | Depende de você |
-| Workflow low-code versionado em Git | `workflows/jurisflow-intake.json` | Pronto, reexportar após validar no n8n |
-| README v1 com problema, solução, como rodar, arquitetura e URL | `README.md` | Pronto, falta preencher a URL |
+| Repositório público no perfil pessoal | github.com/Edilene01/ai-factory-jurisflow | **Feito** |
+| URL pública funcional, independente da sua máquina | n8n Cloud, `contatestes-01` | **Parcial**: a rota responde e recusa chamada anônima, porém o caminho completo ainda não executou |
+| Três smoke tests documentados e funcionando | `tests/smoke/` e `docs/smoke-tests.md` | Código pronto, **não executados** contra a URL pública |
+| Pipeline de CI/CD disparado por push na branch principal | `.github/workflows/ci-cd.yml` | **Parcial**: dispara e o job de qualidade passa; os jobs de deploy falham por falta de Environments |
+| Ambientes de dev e prod separados, com secrets distintos | GitHub Environments e Railway | **Não iniciado** |
+| Workflow low-code versionado em Git | `workflows/jurisflow-intake.json` | Versionado, **com divergência conhecida**: a versão publicada ainda usa Basic Auth |
+| README v1 com problema, solução, como rodar, arquitetura e URL | `README.md` | **Feito**, com a URL pública registrada |
 | `.env.example` e `.gitignore` | Raiz | Pronto |
-| Tag SemVer, CHANGELOG e GitHub Release publicado | `CHANGELOG.md` e GitHub | Changelog pronto, tag e release dependem de você |
-| Rollback testado, com evidência de execução | `docs/rollback.md` e `docs/evidencias/` | Procedimento pronto, evidência pendente |
+| Tag SemVer, CHANGELOG e GitHub Release publicado | `CHANGELOG.md` e GitHub | **Feito** na v1.0.0 |
+| Rollback testado, com evidência de execução | `docs/rollback.md` e `docs/evidencias/` | Procedimento pronto, **sem evidência de execução** |
 | Post-mortem de uma página, sem apontar culpados | `docs/post-mortem-INC-001.md` | Pronto |
 
 ## Terceiro item: demonstração funcional

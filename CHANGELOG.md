@@ -6,6 +6,13 @@ Todas as mudanças relevantes deste projeto são registradas aqui. O formato seg
 
 ## [Não publicado]
 
+### Em aberto na Etapa 1
+- Publicar, no n8n, a troca de Basic Auth para Header Auth no nó Webhook, hoje presente apenas como rascunho no editor
+- Criar os GitHub Environments `producao` e `desenvolvimento`, com secrets distintos
+- Criar o ambiente de desenvolvimento previsto na ADR-003
+- Executar os três smoke tests contra a URL pública
+- Executar o rollback e registrar a evidência em `docs/evidencias/`
+
 ### A fazer na Etapa 2
 - Trilha de auditoria persistente em Postgres, substituindo o sink em memória
 - Métricas de latência, custo, erro, volume e qualidade, com alerta configurado
