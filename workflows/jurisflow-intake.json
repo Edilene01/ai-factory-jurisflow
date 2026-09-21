@@ -44,7 +44,7 @@
       "parameters": {
         "resource": "chat",
         "operation": "create",
-        "model": "={{ $env.OPENAI_MODEL }}",
+        "model": "gpt-4o-mini",
         "messages": {
           "values": [
             {
@@ -481,7 +481,7 @@
     "executionTimeout": 120,
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "v1.0.0",
+  "versionId": "v1.0.1",
   "id": "jurisflow-case-intake",
   "meta": {
     "templateCredsSetupCompleted": false
