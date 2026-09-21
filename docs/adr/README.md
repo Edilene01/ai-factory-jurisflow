@@ -7,7 +7,8 @@ Instrução de instalação e comando de terminal não entram em ADR: isso é as
 | ADR | Decisão | Status | Data |
 |---|---|---|---|
 | [ADR-001](ADR-001-manter-n8n-como-orquestrador.md) | Manter o n8n como orquestrador e evoluir o protótipo | Aceita | 18/09/2026 |
-| [ADR-002](ADR-002-hospedagem-railway-ambientes-separados.md) | Hospedar em Railway, com dev e prod separados | Aceita | 18/09/2026 |
+| [ADR-002](ADR-002-hospedagem-railway-ambientes-separados.md) | Hospedar em Railway, com dev e prod separados | Substituída pela ADR-003 | 18/09/2026 |
+| [ADR-003](ADR-003-producao-n8n-cloud-desenvolvimento-railway.md) | Produção no n8n Cloud e desenvolvimento no Railway | Aceita | 21/09/2026 |
 
 Uma ADR aceita não é imutável. Quando a realidade mudar, cria-se uma nova ADR que substitui
 a anterior, e a antiga passa a `status: substituída`, sem ser apagada, porque o histórico da

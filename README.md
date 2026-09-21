@@ -49,8 +49,10 @@ e de containers. As decisões que levaram a esse desenho estão registradas em
 [`docs/adr/`](docs/adr/), e a matriz que sustenta a escolha de stack em
 [`docs/matriz-decisao-stack.md`](docs/matriz-decisao-stack.md).
 
-Em resumo: n8n auto-hospedado em Railway, com ambientes de desenvolvimento e produção
-separados, workflow versionado em Git como fonte da verdade e publicação por API.
+Em resumo: produção no n8n Cloud e desenvolvimento em container n8n no Railway, com secrets
+distintos em cada ambiente, workflow versionado em Git como fonte da verdade e publicação por
+API. A ADR-003 registra por que os dois ambientes ficaram em plataformas diferentes, e o que
+se perde com isso.
 
 ## Como rodar localmente
 

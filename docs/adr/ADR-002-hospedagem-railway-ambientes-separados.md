@@ -1,6 +1,6 @@
 # ADR-002: Hospedar em Railway, com ambientes de desenvolvimento e produção separados
 
-* **Status:** aceita
+* **Status:** substituída pela [ADR-003](ADR-003-producao-n8n-cloud-desenvolvimento-railway.md) em 21/09/2026
 * **Data:** 18/09/2026
 * **Decisora:** Edilene Chagas Faria
 * **Depende de:** ADR-001

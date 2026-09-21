@@ -14,14 +14,14 @@ C4Container
     System_Ext(slack, "Slack da JurisFlow", "6 canais de destino")
     System_Ext(gha, "GitHub Actions", "Pipeline de qualidade e entrega")
 
-    Container_Boundary(prod, "Ambiente de produção (Railway)") {
-        Container(n8n, "Instância n8n", "Docker, imagem fixada", "Executa o workflow Case Intake Router v1.0")
+    Container_Boundary(prod, "Ambiente de produção (n8n Cloud)") {
+        Container(n8n, "Instância n8n Cloud", "Gerenciada pelo fornecedor", "Executa o workflow Case Intake Router v1.0")
         Container(wf, "Workflow Case Intake Router", "JSON versionado no Git", "Webhook, sanitização, classificação, parse, resposta, roteamento e auditoria")
-        ContainerDb(db, "Banco do n8n", "Postgres gerenciado", "Credenciais e metadados. Payload de execução com sucesso não é persistido")
+        ContainerDb(db, "Banco do n8n", "Gerenciado pelo n8n Cloud", "Credenciais e metadados. Payload de execução com sucesso não é persistido")
     }
 
     Container_Boundary(dev, "Ambiente de desenvolvimento (Railway)") {
-        Container(n8ndev, "Instância n8n de desenvolvimento", "Docker", "Mesmo workflow, secrets próprios, sem tráfego real")
+        Container(n8ndev, "Instância n8n de desenvolvimento", "Docker em container, imagem fixada", "Mesmo workflow, secrets próprios, sem tráfego real")
     }
 
     Rel(cliente, site, "Preenche o formulário")
