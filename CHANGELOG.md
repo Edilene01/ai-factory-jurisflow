@@ -23,6 +23,13 @@ Todas as mudanças relevantes deste projeto são registradas aqui. O formato seg
 - `tests/validate_workflow.py`: passa a validar também o agendador de retenção e a conferir que os prazos do SQL e do workflow contam a mesma história
 - `.github/workflows/ci-cd.yml`: publica o agendador de retenção nos dois ambientes
 
+### Alterado — Etapa 2, Bloco 0 (plataforma)
+- **ADR-005**: Railway nos dois ambientes. A instância que servia de desenvolvimento é promovida a produção, por ser a comprovada, e uma segunda instância passa a ser o desenvolvimento. Restaura a paridade que a ADR-003 havia registrado como sua pior consequência
+- **ADR-004 substituída no mesmo dia**: o período de teste do n8n Cloud não libera a API pública, o que torna inalcançável o seu primeiro critério de validação, a publicação sem intervenção manual
+- `README.md`, `docs/architecture/c4-nivel2-containers.md` e o checklist passam a descrever a topologia Railway; as ADRs anteriores ficam como histórico da decisão, não como descrição do que está no ar
+- `docs/estado-da-entrega.md` marcado como registro histórico da Etapa 1
+- Variável `N8N_PUBLIC_URL` do ambiente `producao` apontada para o Railway
+
 ### Em aberto na Etapa 1
 - Publicar, no n8n, a troca de Basic Auth para Header Auth no nó Webhook, hoje presente apenas como rascunho no editor
 - Criar o ambiente de desenvolvimento previsto na ADR-003

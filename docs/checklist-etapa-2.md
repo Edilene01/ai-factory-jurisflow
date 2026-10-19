@@ -12,13 +12,19 @@ Sem URL viva não há métrica, alerta nem medição de otimização.
 
 | Item | Situação |
 |---|---|
-| Instância de produção no n8n Cloud | **Caiu.** `contatestes-01` responde "404 – No instance here". A instância não existe mais |
-| Instância de desenvolvimento no Railway | **No ar**, `/healthz` responde 200 |
-| Workflow de intake no Railway | **Inativo**, por isso `/webhook/intake` devolve 404 |
-| *Pipeline* de CI/CD | **Vermelho** nas seis execuções. O *job* de qualidade passa; o deploy falha com `HTTP 401` na API do n8n |
-| Decidir a plataforma de produção e registrar em ADR-004 | Pendente |
-| Reemitir `N8N_API_KEY` e atualizar os dois *Environments* | Pendente, registrado em [`rotacao-credenciais.md`](rotacao-credenciais.md) |
+| Decidir a plataforma e registrar em ADR | **Feito.** [ADR-005](adr/ADR-005-railway-nos-dois-ambientes.md): Railway nos dois ambientes. A ADR-004 foi substituída no mesmo dia, ao se descobrir que o período de teste do n8n Cloud não libera a API pública |
+| Instância de produção | **Promovida**: a instância Railway que servia de desenvolvimento passa a ser produção, por ser a comprovada |
+| Workflow de intake | **Ativo.** Publicado e ativado pelo `deploy_workflow.py` em 19/10/2026 |
+| URL pública | **Responde.** `/healthz` em 200 e `/webhook/intake` recusa chamada anônima com 403 |
+| Smoke tests 1 e 2 | **Passaram** contra a URL pública, pela primeira vez no projeto |
+| Smoke test 3, ponta a ponta | **Falha com 403.** A credencial *JurisFlow Webhook Signature* na instância tem valor que não bate com nenhum segredo guardado. Resolver na interface do n8n |
+| Bug do deploy que apagava credenciais | **Corrigido.** O `deploy_workflow.py` relê os ids da versão publicada e os recoloca antes do PUT |
+| **Criar a segunda instância Railway, para desenvolvimento** | **Pendente, e é o próximo passo.** Mesma imagem `n8nio/n8n:2.28.7`, e as três credenciais com os nomes exatos: `JurisFlow Webhook Signature`, `OpenAI JurisFlow` e `Slack JurisFlow Bot` |
+| Separação de ambientes | ⚠️ **Transitória.** Os dois *Environments* apontam hoje para a mesma URL, porque a instância de desenvolvimento ainda não existe. Enquanto durar, um *push* em `develop` publica em produção. Não use `develop` até a segunda instância estar de pé |
+| Mover os *secrets* para o *Environment* certo | Pendente. A chave de API e o segredo de webhook que hoje estão em `desenvolvimento` pertencem agora a `producao` |
+| *Pipeline* de CI/CD | **Vermelho** nas seis execuções anteriores. O *job* de qualidade passa; o deploy falhava por `HTTP 401` contra a instância que não existe mais |
 | Aplicar `db/schema/001_trilha_auditoria.sql` nos dois bancos | Pendente |
+| Anotar o prazo das assinaturas Railway | Pendente, tabela em [`rotacao-credenciais.md`](rotacao-credenciais.md) |
 
 ## Bloco 1 — Credenciais e LGPD (50% da nota)
 
@@ -31,7 +37,7 @@ Sem URL viva não há métrica, alerta nem medição de otimização.
 | Mapa de dados pessoais com base legal por ponto de coleta | [`lgpd/mapa-dados-pessoais.md`](lgpd/mapa-dados-pessoais.md) | **Pronto**: 10 pontos, 3 avaliações de legítimo interesse |
 | Transferência internacional reconhecida e documentada | [`lgpd/transferencia-internacional.md`](lgpd/transferencia-internacional.md) | **Pronto**: 4 fluxos, art. 33, IX |
 | Política de retenção e exclusão | [`lgpd/politica-retencao-exclusao.md`](lgpd/politica-retencao-exclusao.md) | **Pronto** |
-| Mecanismo real que executa a retenção | [`db/retencao/`](../db/retencao/) e [`workflows/jurisflow-retencao.json`](../workflows/jurisflow-retencao.json) | **Escrito e validado**, não publicado: depende do Bloco 0 |
+| Mecanismo real que executa a retenção | [`db/retencao/`](../db/retencao/) e [`workflows/jurisflow-retencao.json`](../workflows/jurisflow-retencao.json) | **Publicado** na instância em 19/10/2026, `active: false`. Não ativa enquanto faltar a credencial Postgres no n8n |
 | Segunda via da purga, fora da plataforma | [`.github/workflows/retencao.yml`](../.github/workflows/retencao.yml) | **Escrita e validada**, nunca executada: falta `DATABASE_URL` nos *Environments* |
 | Cadastrar `DATABASE_URL` em `producao` e `desenvolvimento` | *GitHub Environments* | **Pendente** |
 | Expor o Postgres ao *runner* do GitHub, ou decidir não expor | Railway | **Pendente** |
