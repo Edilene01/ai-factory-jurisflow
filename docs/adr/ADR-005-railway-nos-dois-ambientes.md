@@ -66,7 +66,7 @@ chamada anônima com 403 e os *smoke tests* 1 e 2 passam contra a URL pública.
 
 * **A operação volta a ser nossa.** A ADR-003 contabilizara como ganho a produção gerenciada, com disponibilidade e *backup* por conta do fornecedor. Isso se perde: atualização de versão, cópia de segurança e recuperação passam a ser trabalho da equipe.
 * **O Railway também é assinatura, e também vence.** Trocar de fornecedor não elimina o modo de falha que derrubou a produção em outubro; apenas o move. A tabela de prazos em `rotacao-credenciais.md` continua sendo a mitigação, agora com duas linhas.
-* Uma segunda instância custa, ainda que pouco. O orçamento de US$ 120 absorve, mas deixa de ser gratuito.
+* Uma segunda instância custa, ainda que pouco. Para conter isso, o ambiente de desenvolvimento opera **sob demanda**: o serviço fica parado e é ligado apenas nas janelas de uso, já que o Railway cobra por segundo de uso e serviço parado consome só o volume. O efeito colateral é que a paridade prometida vale quando o dev está no ar, e não continuamente, e que um *push* em `develop` com o serviço desligado falha por não alcançar a instância.
 * Produção herda uma instância que nasceu como desenvolvimento, de modo que o nome do serviço e o histórico carregam essa origem. É ruído cosmético, e preferi aceitá-lo a entregar o ambiente avaliado a uma instância não testada.
 * A promoção exige remanejar *secrets* entre os dois *GitHub Environments*, e secret trocado de lugar é oportunidade de erro.
 
