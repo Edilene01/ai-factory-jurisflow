@@ -250,7 +250,7 @@ constrangida.
 |---|---|
 | Esquema SQL das duas tabelas | **Escrito e versionado**, não aplicado a nenhum banco |
 | Purga diária em SQL | **Escrita e versionada** |
-| Agendamento no n8n | **Escrito e versionado**, `active: false`, não publicado |
+| Agendamento no n8n | **Publicado** na instância em 19/10/2026, `active: false`. A ativação falha com "Credential not configured: postgres" nos dois nós de purga, e é esse o próximo passo |
 | Agendamento no GitHub Actions | **Escrito e versionado**, nunca executado: falta cadastrar `DATABASE_URL` nos dois *Environments* e expor o Postgres ao *runner* |
 | Variáveis de pruning no ambiente local | **Em vigor**, no `docker-compose.yml` |
 | Variáveis de pruning no Railway e em produção | **Pendente** |
