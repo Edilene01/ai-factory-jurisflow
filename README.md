@@ -4,7 +4,7 @@ Triagem automática de formulários de intake jurídico: recebe o caso, classifi
 urgência, devolve um protocolo ao cliente e entrega o caso ao time responsável no Slack,
 com a identidade do solicitante mascarada.
 
-**URL pública:** https://contatestes-01.app.n8n.cloud/webhook/intake
+**URL pública:** `https://contatestes-01.app.n8n.cloud/webhook/intake` — **fora do ar desde outubro de 2026.** A instância deixou de existir no n8n Cloud e responde "404 – No instance here". O restabelecimento é o Bloco 0 do [checklist da Etapa 2](docs/checklist-etapa-2.md).
 **Estado da entrega:** ver [`docs/estado-da-entrega.md`](docs/estado-da-entrega.md), que registra o que está verificado e o que ainda não está
 **Status:** v1.0.0 · [CHANGELOG](CHANGELOG.md) · [Releases](../../releases)
 
@@ -107,16 +107,58 @@ A branch `develop` faz o mesmo contra o ambiente de desenvolvimento. Cada ambien
 
 Definição do *pipeline*: [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml).
 
-## Segurança e dado pessoal
+Há um segundo workflow, [`retencao.yml`](.github/workflows/retencao.yml), que não participa
+da entrega: ele roda em horário agendado e executa a política de retenção de dados pessoais,
+descrita na seção de LGPD.
+
+## Segurança de credenciais
 
 Nenhum segredo entra no repositório. As credenciais vivem nos *secrets* da plataforma e nas
 credenciais do n8n, e `tests/validate_workflow.py` falha se qualquer padrão de chave voltar
-ao JSON. O procedimento de rotação está em [`docs/rotacao-credenciais.md`](docs/rotacao-credenciais.md).
+aos JSONs versionados. O `gitleaks` roda no *pipeline* a cada *push*, contra o histórico
+completo. O procedimento e o histórico de rotação estão em
+[`docs/rotacao-credenciais.md`](docs/rotacao-credenciais.md).
 
-A descrição do caso é comunicação coberta por sigilo profissional. Por isso o texto enviado
-ao provedor de LLM passa por remoção de identificadores, o Slack recebe nome e CPF mascarados,
-e a instância não persiste o *payload* de execuções bem-sucedidas. O mapa de dados pessoais,
-a base legal de cada ponto de coleta e a política de retenção entram na Etapa 2.
+O trio obrigatório está no lugar: [`.env.example`](.env.example) como modelo,
+[`.gitignore`](.gitignore) bloqueando `.env` e variantes, e o `.env` local fora do
+versionamento. Produção e desenvolvimento são *GitHub Environments* distintos, sem nenhum
+valor compartilhado entre eles.
+
+## LGPD
+
+A descrição do caso é comunicação coberta por sigilo profissional, e o relato pode conter
+dado sensível. O tratamento está documentado em três peças:
+
+| Documento | O que responde |
+|---|---|
+| [`docs/lgpd/mapa-dados-pessoais.md`](docs/lgpd/mapa-dados-pessoais.md) | Os dez pontos de coleta e tratamento, a base legal de cada um, os papéis de controlador e operador, as avaliações de legítimo interesse e os direitos do titular |
+| [`docs/lgpd/transferencia-internacional.md`](docs/lgpd/transferencia-internacional.md) | Os quatro fluxos que cruzam a fronteira, a hipótese do art. 33 que os autoriza e o que falta formalizar em contrato |
+| [`docs/lgpd/politica-retencao-exclusao.md`](docs/lgpd/politica-retencao-exclusao.md) | Prazos por armazenamento, o mecanismo que executa cada um e o procedimento de exclusão a pedido do titular |
+
+Em resumo, o que o sistema faz hoje:
+
+* **A base legal é a execução de contrato**, art. 7º, V, e não o consentimento. Quem preenche
+  um intake está pedindo atendimento, e não concedendo permissão opcional. Para dado sensível,
+  a base é o art. 11, II, "d", exercício regular de direitos.
+* **A sanitização acontece antes da chamada ao LLM**, no nó `Sanitizar Entrada`, que remove
+  CPF, CNPJ, e-mail e telefone do texto e mascara nome e CPF. O provedor nunca recebe o nome,
+  o CPF nem qualquer chave de ligação com o titular. O limite conhecido dessa sanitização
+  está declarado na seção 5 do mapa.
+* **Toda chamada ao LLM é transferência internacional**, e a entrega no Slack também. As duas
+  se apoiam no art. 33, IX, c/c art. 7º, V. A incorporação das cláusulas-padrão da
+  Resolução CD/ANPD nº 19/2024 é pendência contratual registrada.
+* **Execução com sucesso não grava payload** (`saveDataSuccessExecution: "none"`). Só a
+  execução com erro persiste, por 72 horas.
+* **A retenção tem mecanismo, e não só prazo**: esquema em [`db/schema/`](db/schema/) e purga
+  em [`db/retencao/`](db/retencao/), com dois agendadores independentes. Às 03:15, o workflow
+  do n8n [`jurisflow-retencao.json`](workflows/jurisflow-retencao.json); às 04:15, o
+  [`retencao.yml`](.github/workflows/retencao.yml) no GitHub Actions, que roda fora da
+  plataforma e não cai junto com ela. Cada purga grava a contagem em `jurisflow_purga_log`,
+  e a segunda via alerta em P2 quando encontra algo para remover, porque isso significa que
+  a primeira não rodou.
+
+O estado de implantação de cada item, incluindo o que ainda não roda, está na seção 5 da
+política de retenção.
 
 ## Operação
 

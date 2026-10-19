@@ -21,6 +21,7 @@ problema que volta.
 | `SLACK_BOT_TOKEN` | Credencial do n8n | Painel de apps do Slack | Entrega nos canais para |
 | `N8N_API_KEY` | Secret do GitHub, por ambiente | Interface do n8n | O deploy automatizado para |
 | Credenciais do banco | Variáveis da plataforma | Painel do Railway | A instância reinicia |
+| `DATABASE_URL` | Secret do GitHub, por ambiente, e credencial Postgres do n8n | Painel do Railway, junto com a senha do banco | A purga de retenção para nas duas vias. Trocar o secret do GitHub e a credencial do n8n na mesma janela |
 
 ## Procedimento
 
@@ -51,10 +52,29 @@ rotina de 90 dias não sobrevive ao terceiro mês.
 
 ## Histórico de rotações
 
-| Data | Credencial | Motivo | Responsável |
+| Data | Credencial | Ambiente | Motivo | Responsável |
+|---|---|---|---|---|
+| 21/09/2026 | `OPENAI_API_KEY` | dev e prod | Adoção do projeto. Chave herdada do protótipo, exposta no JSON e em todo o histórico do Git | Edilene Chagas Faria |
+| 21/09/2026 | `JURISFLOW_WEBHOOK_SECRET` | dev e prod | Adoção do projeto. Segredo exposto no JSON e no histórico. Valores distintos por ambiente, gerados com `openssl rand -hex 32` | Edilene Chagas Faria |
+| 21/09/2026 | `SLACK_BOT_TOKEN` | dev e prod | Adoção do projeto. Token do protótipo substituído por app próprio | Edilene Chagas Faria |
+| 21/09/2026 | `N8N_API_KEY` | dev e prod | Emissão inicial, para o deploy automatizado pelo *pipeline* | Edilene Chagas Faria |
+
+**Rotação de rotina seguinte:** 20/12/2026, pelo ciclo de 90 dias.
+
+### Rotação pendente
+
+| Credencial | Ambiente | Motivo | Situação |
 |---|---|---|---|
-| `<preencher>` | `OPENAI_API_KEY` | Adoção do projeto, chave herdada exposta no JSON e no histórico | Edilene Chagas Faria |
-| `<preencher>` | `JURISFLOW_WEBHOOK_SECRET` | Adoção do projeto, segredo exposto no JSON e no histórico | Edilene Chagas Faria |
+| `N8N_API_KEY` | produção | O *job* de deploy devolve `HTTP 401 Unauthorized` desde 22/09/2026, e a instância de produção no n8n Cloud deixou de existir. A chave precisa ser reemitida na instância que substituir aquela | **Em aberto**, depende do Bloco 0 da Etapa 2 |
+
+### Observação sobre as datas
+
+As datas acima correspondem à adoção do projeto, registrada no commit
+`fb1ffa3 feat: adota o prototipo JurisFlow e publica a versao 1.0.0`, de 21/09/2026, e são
+coerentes com os horários de geração dos arquivos de credencial mantidos fora do repositório.
+Confirme cada uma no painel do provedor correspondente antes de usar este quadro como prova
+em avaliação externa: o histórico de rotação só tem valor se cada linha puder ser verificada
+na origem.
 
 ## Verificação permanente
 
