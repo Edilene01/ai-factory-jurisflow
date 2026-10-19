@@ -16,6 +16,8 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 WORKFLOW = os.path.join(HERE, "..", "workflows", "jurisflow-intake.json")
+RETENCAO = os.path.join(HERE, "..", "workflows", "jurisflow-retencao.json")
+PURGA_SQL = os.path.join(HERE, "..", "db", "retencao", "purga_diaria.sql")
 
 # Padrões que nunca podem aparecer no workflow versionado.
 PADROES_PROIBIDOS = [
@@ -107,11 +109,56 @@ def main():
     ids = [n.get("id") for n in nos]
     check(len(ids) == len(set(ids)), "IDs de nós são únicos")
 
+    # 8. Workflow de retenção: os prazos da política precisam estar no agendador,
+    #    senão a política vira documento sem execução.
+    print()
+    print("-- workflow de retenção --")
+    with open(RETENCAO, encoding="utf-8") as f:
+        bruto_ret = f.read()
+    wf_ret = json.loads(bruto_ret)
+    print(f"[ok] JSON parseou: {os.path.basename(RETENCAO)}")
+
+    for padrao, descricao in PADROES_PROIBIDOS:
+        check(not re.findall(padrao, bruto_ret), f"sem {descricao} no agendador")
+
+    tipos_ret = [n.get("type") for n in wf_ret.get("nodes", [])]
+    check("n8n-nodes-base.scheduleTrigger" in tipos_ret, "tem gatilho agendado")
+    check(tipos_ret.count("n8n-nodes-base.postgres") == 2,
+          "tem os dois blocos de purga em Postgres")
+
+    for prazo, alvo in (("72 hours", "execution_entity"),
+                        ("12 months", "jurisflow_trilha_auditoria")):
+        check(prazo in bruto_ret and alvo in bruto_ret,
+              f"purga de {alvo} com prazo de {prazo}")
+
+    check("jurisflow_purga_log" in bruto_ret,
+          "cada purga grava contagem em jurisflow_purga_log")
+    check(wf_ret.get("settings", {}).get("timezone") == "America/Sao_Paulo",
+          "agendador com fuso explícito")
+
+    nomes_ret = {n["name"] for n in wf_ret.get("nodes", [])}
+    soltas_ret = []
+    for origem, conn in wf_ret.get("connections", {}).items():
+        if origem not in nomes_ret:
+            soltas_ret.append(f"origem inexistente: {origem}")
+        for ramo in conn.get("main", []):
+            for link in ramo:
+                if link.get("node") not in nomes_ret:
+                    soltas_ret.append(f"destino inexistente: {link.get('node')}")
+    check(not soltas_ret, "connections do agendador referenciam nós existentes"
+          + ("" if not soltas_ret else f" -> {soltas_ret}"))
+
+    # 9. Os prazos do SQL e os do agendador têm de contar a mesma história.
+    with open(PURGA_SQL, encoding="utf-8") as f:
+        sql = f.read()
+    for prazo in ("72 hours", "12 months"):
+        check(prazo in sql, f"purga_diaria.sql mantém o prazo de {prazo}")
+
     print()
     if falhas:
         print(f"RESULTADO: {len(falhas)} falha(s).")
         sys.exit(1)
-    print("RESULTADO: workflow estruturalmente válido e livre de segredos.")
+    print("RESULTADO: workflows estruturalmente válidos e livres de segredos.")
 
 
 if __name__ == "__main__":
