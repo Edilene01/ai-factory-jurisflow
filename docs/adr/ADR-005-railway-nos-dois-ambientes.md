@@ -72,7 +72,7 @@ chamada anônima com 403 e os *smoke tests* 1 e 2 passam contra a URL pública.
 
 ### Mitigações adotadas
 
-Fixar a **mesma imagem** nas duas instâncias, hoje `n8nio/n8n:2.28.7`, e tratar atualização
+Fixar a **mesma imagem** nas duas instâncias, hoje `n8nio/n8n:2.40.5`, e tratar atualização
 como mudança deliberada, nunca automática. É o que torna a paridade real em vez de nominal.
 
 Registrar o **prazo das duas assinaturas** na tabela de prazos, pelo motivo que a ADR-004 já
