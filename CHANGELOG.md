@@ -6,17 +6,35 @@ Todas as mudanças relevantes deste projeto são registradas aqui. O formato seg
 
 ## [Não publicado]
 
+### Adicionado — Etapa 2, Bloco 1 (LGPD)
+- `docs/lgpd/mapa-dados-pessoais.md`: registro do art. 37 com dez pontos de coleta e tratamento, base legal de cada um, papéis de controlador e operador, três avaliações de legítimo interesse e o mapeamento dos direitos do titular
+- `docs/lgpd/transferencia-internacional.md`: os quatro fluxos que cruzam a fronteira, a fundamentação no art. 33, IX, c/c art. 7º, V, e a pendência de incorporação das cláusulas-padrão da Resolução CD/ANPD nº 19/2024
+- `docs/lgpd/politica-retencao-exclusao.md`: prazos por armazenamento, mecanismo que executa cada um e procedimento de exclusão a pedido do titular em três passos
+- `db/schema/001_trilha_auditoria.sql`: tabelas `jurisflow_trilha_auditoria` e `jurisflow_purga_log`, esta última como prova de execução da política
+- `db/retencao/purga_diaria.sql` e `db/retencao/excluir_por_protocolo.sql`
+- `workflows/jurisflow-retencao.json`: agendador diário às 03:15, que executa a purga, grava a contagem e só notifica `#juris-ops` quando houve remoção ou falha
+- `.github/workflows/retencao.yml`: segunda via da purga às 04:15, hospedada fora do n8n. Usa a defasagem de uma hora como verificação, já que remover alguma coisa significa que a via do n8n não rodou, e alerta em P2 nesse caso. Confere também que não restou registro vencido e publica o resumo no *GitHub Step Summary*
+- `docs/checklist-etapa-2.md`, com o estado de cada exigência da etapa
+
+### Modificado
+- `README.md`: seção de LGPD e separação da seção de segurança de credenciais
+- `.env.example`: `DATABASE_URL` e as cinco variáveis de retenção do n8n, que antes existiam só no `docker-compose.yml`
+- `docs/rotacao-credenciais.md`: histórico de rotações preenchido e registro da rotação pendente da `N8N_API_KEY`
+- `tests/validate_workflow.py`: passa a validar também o agendador de retenção e a conferir que os prazos do SQL e do workflow contam a mesma história
+- `.github/workflows/ci-cd.yml`: publica o agendador de retenção nos dois ambientes
+
 ### Em aberto na Etapa 1
 - Publicar, no n8n, a troca de Basic Auth para Header Auth no nó Webhook, hoje presente apenas como rascunho no editor
-- Criar os GitHub Environments `producao` e `desenvolvimento`, com secrets distintos
 - Criar o ambiente de desenvolvimento previsto na ADR-003
 - Executar os três smoke tests contra a URL pública
 - Executar o rollback e registrar a evidência em `docs/evidencias/`
 
 ### A fazer na Etapa 2
+- Restabelecer a instância de produção, que deixou de existir no n8n Cloud, e registrar a decisão em ADR-004
+- Reemitir a `N8N_API_KEY` e destravar o deploy, hoje em `HTTP 401`
 - Trilha de auditoria persistente em Postgres, substituindo o sink em memória
 - Métricas de latência, custo, erro, volume e qualidade, com alerta configurado
-- Mapa de dados pessoais, base legal por ponto de coleta e política de retenção
+- Otimização medida, com número antes e depois
 - Fallback de provedor de LLM
 
 ## [1.0.0] – 2026-09-18
