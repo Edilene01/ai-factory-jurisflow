@@ -1,0 +1,164 @@
+name: Retenção de dados
+
+# Segunda via da purga descrita em docs/lgpd/politica-retencao-exclusao.md.
+#
+# A primeira via é o workflow do n8n (workflows/jurisflow-retencao.json), que roda
+# às 03:15. Esta aqui roda uma hora depois, de propósito: se o n8n estiver de pé e
+# tiver cumprido a sua parte, não sobra nada para remover, e o zero é a prova de
+# que a primeira via funcionou. Se vier um número diferente de zero, o n8n falhou
+# ou está fora do ar, e isso é o que merece alerta.
+#
+# A razão de existir é concreta: em outubro de 2026 a instância de produção no n8n
+# Cloud deixou de existir, e com ela pararia qualquer purga agendada lá dentro, sem
+# que nada avisasse. Um agendador que vive fora da plataforma não cai junto com ela.
+
+on:
+  schedule:
+    # 07:15 UTC = 04:15 em America/Sao_Paulo (UTC-3, sem horário de verão desde 2019).
+    # O cron do GitHub Actions é sempre UTC e não aceita fuso.
+    - cron: '15 7 * * *'
+  workflow_dispatch:
+    inputs:
+      ambiente:
+        description: Ambiente alvo
+        type: choice
+        options: [producao, desenvolvimento]
+        default: producao
+        required: true
+
+concurrency:
+  group: retencao-${{ github.event.inputs.ambiente || 'producao' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  purgar:
+    name: Purga por prazo de retenção
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: ${{ github.event.inputs.ambiente || 'producao' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Garantir o cliente do Postgres
+        run: |
+          if ! command -v psql > /dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq postgresql-client
+          fi
+          psql --version
+
+      - name: Conferir que o esquema existe
+        env:
+          PGCONNECT_TIMEOUT: '15'
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::DATABASE_URL não está definida neste Environment. Cadastre em Settings > Environments."
+            exit 1
+          fi
+
+          faltando=$(psql "$DATABASE_URL" -At -c "
+            SELECT string_agg(t, ', ')
+              FROM unnest(ARRAY['jurisflow_trilha_auditoria',
+                                'jurisflow_purga_log',
+                                'execution_entity']) AS t
+             WHERE to_regclass(t) IS NULL")
+
+          if [ -n "$faltando" ]; then
+            echo "::error::Tabelas ausentes: $faltando. Aplique db/schema/001_trilha_auditoria.sql antes de agendar a purga."
+            exit 1
+          fi
+          echo "Esquema presente."
+
+      - name: Executar a purga
+        id: purga
+        env:
+          PGCONNECT_TIMEOUT: '15'
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          set -o pipefail
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
+               -f db/retencao/purga_diaria.sql | tee saida-purga.txt
+
+          # A primeira via roda uma hora antes, de modo que tudo gravado nos
+          # últimos dois minutos é desta execução.
+          removido=$(psql "$DATABASE_URL" -At -c "
+            SELECT coalesce(sum(linhas_removidas), 0)
+              FROM jurisflow_purga_log
+             WHERE executado_em >= now() - INTERVAL '2 minutes'")
+
+          echo "removido=${removido}" >> "$GITHUB_OUTPUT"
+          echo "Linhas removidas por esta execução: ${removido}"
+
+      - name: Conferir que não sobrou nada vencido
+        id: verificacao
+        env:
+          PGCONNECT_TIMEOUT: '15'
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          vencidas=$(psql "$DATABASE_URL" -At -c "
+            SELECT (SELECT count(*) FROM execution_entity
+                     WHERE \"startedAt\" < now() - INTERVAL '72 hours')
+                 + (SELECT count(*) FROM jurisflow_trilha_auditoria
+                     WHERE recebido_em < now() - INTERVAL '12 months')")
+
+          echo "vencidas=${vencidas}" >> "$GITHUB_OUTPUT"
+          if [ "$vencidas" != "0" ]; then
+            echo "::error::Restaram ${vencidas} registro(s) vencido(s) depois da purga."
+            exit 1
+          fi
+          echo "Nenhum registro vencido restante."
+
+      - name: Resumo da execução
+        if: always()
+        env:
+          REMOVIDO: ${{ steps.purga.outputs.removido }}
+          VENCIDAS: ${{ steps.verificacao.outputs.vencidas }}
+        run: |
+          {
+            echo "### Purga de retenção"
+            echo ""
+            echo "| Item | Valor |"
+            echo "|---|---|"
+            echo "| Ambiente | ${{ github.event.inputs.ambiente || 'producao' }} |"
+            echo "| Linhas removidas nesta execução | ${REMOVIDO:-não apurado} |"
+            echo "| Registros vencidos restantes | ${VENCIDAS:-não apurado} |"
+            echo "| Commit | ${{ github.sha }} |"
+            echo ""
+            if [ "${REMOVIDO:-0}" = "0" ]; then
+              echo "Zero removido é o resultado esperado: significa que a purga do n8n, às 03:15, cumpriu a sua parte."
+            else
+              echo "**Removeu ${REMOVIDO} linha(s).** A primeira via não rodou. Conferir o workflow de retenção no n8n."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Alerta P2: a política de retenção deixou de ser executada pela via primária,
+      # ou a segunda via quebrou. Público: quem opera a plataforma. Canal: #juris-ops.
+      # Não é P1 porque não há indisponibilidade para o cliente; é P2 porque há dado
+      # pessoal permanecendo além do prazo declarado.
+      - name: Alertar em #juris-ops
+        if: failure() || steps.purga.outputs.removido != '0'
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          REMOVIDO: ${{ steps.purga.outputs.removido }}
+        run: |
+          if [ -z "$SLACK_BOT_TOKEN" ]; then
+            echo "::warning::SLACK_BOT_TOKEN não configurado neste Environment; alerta não enviado."
+            exit 0
+          fi
+
+          if [ "${{ job.status }}" = "failure" ]; then
+            texto=":rotating_light: *P2 — purga de retenção falhou* (${{ github.event.inputs.ambiente || 'producao' }})\nA segunda via não conseguiu executar a política. Ver a execução: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          else
+            texto=":warning: *P2 — a purga do n8n não rodou* (${{ github.event.inputs.ambiente || 'producao' }})\nA segunda via removeu ${REMOVIDO} linha(s) que deveriam ter sido removidas às 03:15. Conferir se o workflow de retenção no n8n está ativo."
+          fi
+
+          curl -sS -X POST https://slack.com/api/chat.postMessage \
+            -H "Authorization: Bearer ${SLACK_BOT_TOKEN}" \
+            -H 'Content-Type: application/json; charset=utf-8' \
+            -d "$(jq -n --arg c '#juris-ops' --arg t "$texto" '{channel:$c, text:$t}')"
