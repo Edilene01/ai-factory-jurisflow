@@ -19,7 +19,7 @@ Sem URL viva não há métrica, alerta nem medição de otimização.
 | Smoke tests 1 e 2 | **Passaram** contra a URL pública, pela primeira vez no projeto |
 | Smoke test 3, ponta a ponta | **Falha com 403.** A credencial *JurisFlow Webhook Signature* na instância tem valor que não bate com nenhum segredo guardado. Resolver na interface do n8n |
 | Bug do deploy que apagava credenciais | **Corrigido.** O `deploy_workflow.py` relê os ids da versão publicada e os recoloca antes do PUT |
-| **Criar a segunda instância Railway, para desenvolvimento** | **Pendente, e é o próximo passo.** Mesma imagem `n8nio/n8n:2.28.7`, e as três credenciais com os nomes exatos: `JurisFlow Webhook Signature`, `OpenAI JurisFlow` e `Slack JurisFlow Bot` |
+| **Criar a segunda instância Railway, para desenvolvimento** | **Pendente, e é o próximo passo.** Mesma imagem `n8nio/n8n:2.40.5`, que é a que produção roda hoje, e as três credenciais com os nomes exatos: `JurisFlow Webhook Signature`, `OpenAI JurisFlow` e `Slack JurisFlow Bot` |
 | Separação de ambientes | ⚠️ **Transitória.** Os dois *Environments* apontam hoje para a mesma URL, porque a instância de desenvolvimento ainda não existe. Enquanto durar, um *push* em `develop` publica em produção. Não use `develop` até a segunda instância estar de pé |
 | Mover os *secrets* para o *Environment* certo | Pendente. A chave de API e o segredo de webhook que hoje estão em `desenvolvimento` pertencem agora a `producao` |
 | *Pipeline* de CI/CD | **Vermelho** nas seis execuções anteriores. O *job* de qualidade passa; o deploy falhava por `HTTP 401` contra a instância que não existe mais |
