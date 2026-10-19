@@ -76,6 +76,21 @@ Confirme cada uma no painel do provedor correspondente antes de usar este quadro
 em avaliação externa: o histórico de rotação só tem valor se cada linha puder ser verificada
 na origem.
 
+## Prazos que vencem
+
+Assinatura não é credencial, mas falha do mesmo jeito: vence em silêncio e derruba o sistema
+sem emitir erro de aplicação. Em outubro de 2026 a instância de produção no n8n Cloud deixou
+de existir por término de assinatura, e nada no repositório percebeu. A ADR-004 registra a
+decisão e manda anotar o prazo aqui, ao lado das credenciais, porque é onde se olha.
+
+| Assinatura | Ambiente | Vence em | Consequência de vencer |
+|---|---|---|---|
+| n8n Cloud | produção | `<preencher ao criar a instância>` | A instância é removida, a URL pública devolve 404 e o deploy para |
+| Railway | desenvolvimento | `<preencher>` | A instância hiberna ou é removida, e o deploy em `develop` para |
+
+Confira na véspera, não no dia. A reconstrução exige recriar três credenciais e reemitir a
+chave de API, e isso não se faz em cima da hora.
+
 ## Verificação permanente
 
 Duas barreiras impedem a reincidência. O `tests/validate_workflow.py` falha se qualquer padrão

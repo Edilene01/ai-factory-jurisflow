@@ -34,6 +34,47 @@ def chamar(metodo, caminho, corpo=None):
         return json.loads(bruto) if bruto else {}
 
 
+def preservar_credenciais(payload, atual):
+    """Recoloca no payload os ids de credencial que já existem na instância.
+
+    Os ids são próprios de cada instalação, e por isso o JSON versionado os
+    mantém vazios: gravá-los no Git amarraria o repositório a uma instância e
+    faria o id de um ambiente viajar para o outro.
+
+    O efeito colateral é que um PUT cru apaga o vínculo que existe na instância,
+    e o workflow deixa de ativar com "Missing required credential". Foi o que
+    aconteceu na Etapa 1, e o sintoma aparecia como divergência entre rascunho e
+    versão publicada, sem erro que apontasse a causa.
+
+    Devolve (preservados, pendentes). Pendente é credencial que o workflow pede
+    e que não existe na instância, caso em que só a interface do n8n resolve,
+    porque criar credencial exige o segredo.
+    """
+    por_no, por_tipo = {}, {}
+    for no in atual.get("nodes", []):
+        for tipo, cred in (no.get("credentials") or {}).items():
+            cid = (cred or {}).get("id")
+            if not cid:
+                continue
+            por_no[(no.get("name"), tipo)] = cid
+            por_tipo.setdefault(tipo, cid)
+
+    preservados, pendentes = [], []
+    for no in payload.get("nodes", []):
+        for tipo, cred in (no.get("credentials") or {}).items():
+            if not isinstance(cred, dict) or cred.get("id"):
+                continue
+            # Casa primeiro pelo nó exato; se o nó é novo, herda uma credencial
+            # do mesmo tipo já usada no workflow.
+            cid = por_no.get((no.get("name"), tipo)) or por_tipo.get(tipo)
+            if cid:
+                cred["id"] = cid
+                preservados.append(f"{no.get('name')}:{tipo}")
+            else:
+                pendentes.append(f"{no.get('name')}:{tipo}")
+    return preservados, pendentes
+
+
 def main():
     if not BASE or not API_KEY:
         print("[ERRO] defina N8N_PUBLIC_URL e N8N_API_KEY")
@@ -49,6 +90,19 @@ def main():
 
     if alvo:
         wid = alvo["id"]
+        # A listagem já traz os nós, mas nem toda versão do n8n os inclui.
+        if not alvo.get("nodes"):
+            alvo = chamar("GET", f"/api/v1/workflows/{wid}")
+
+        preservados, pendentes = preservar_credenciais(payload, alvo)
+        if preservados:
+            print(f"[ok] {len(preservados)} vínculo(s) de credencial preservados da instância")
+        if pendentes:
+            faltando = ", ".join(sorted(set(pendentes)))
+            print(f"[nota] sem id na versão publicada: {faltando}")
+            print("       o n8n ainda pode resolver pelo nome da credencial ao salvar.")
+            print("       Se a ativação falhar logo abaixo, crie-a na interface.")
+
         chamar("PUT", f"/api/v1/workflows/{wid}", payload)
         print(f"[ok] workflow '{nome}' atualizado (id {wid})")
     else:
@@ -60,7 +114,17 @@ def main():
         chamar("POST", f"/api/v1/workflows/{wid}/activate")
         print(f"[ok] workflow ativado, versão {wf.get('versionId', 'sem versionId')}")
     except urllib.error.HTTPError as erro:
-        print(f"[AVISO] não consegui ativar automaticamente: {erro.code}. Ative pela interface.")
+        # O corpo da resposta é onde o n8n diz qual nó impediu a ativação. Sem
+        # ele, a mensagem vira um 400 sem causa, que é o pior tipo de log.
+        detalhe = ""
+        try:
+            detalhe = json.loads(erro.read().decode("utf-8")).get("message", "")
+        except Exception:
+            pass
+        print(f"[AVISO] não consegui ativar automaticamente: {erro.code}")
+        if detalhe:
+            print("        " + detalhe.replace("\n", "\n        "))
+        print("        Ative pela interface depois de resolver o que está acima.")
         return 1
 
     return 0
