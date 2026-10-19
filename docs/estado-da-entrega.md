@@ -1,5 +1,10 @@
 # Estado da entrega – Etapa 1
 
+> **Registro histórico da Etapa 1, preservado como estava.** O que ele descreve como
+> produção, a instância `contatestes-01` no n8n Cloud, deixou de existir em outubro de
+> 2026. O estado atual do sistema está em [`checklist-etapa-2.md`](checklist-etapa-2.md),
+> e a mudança de plataforma na [ADR-005](adr/ADR-005-railway-nos-dois-ambientes.md).
+
 **Atualizado em:** 21/09/2026
 **Ambiente de produção:** n8n Cloud, instância `contatestes-01`
 **URL pública:** https://contatestes-01.app.n8n.cloud/webhook/intake

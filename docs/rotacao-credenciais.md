@@ -85,8 +85,13 @@ decisão e manda anotar o prazo aqui, ao lado das credenciais, porque é onde se
 
 | Assinatura | Ambiente | Vence em | Consequência de vencer |
 |---|---|---|---|
-| n8n Cloud | produção | `<preencher ao criar a instância>` | A instância é removida, a URL pública devolve 404 e o deploy para |
-| Railway | desenvolvimento | `<preencher>` | A instância hiberna ou é removida, e o deploy em `develop` para |
+| Railway | produção | `<preencher>` | A instância hiberna ou é removida, a URL pública cai e o deploy em `main` para |
+| Railway | desenvolvimento | `<preencher ao criar a instância>` | A instância cai e o deploy em `develop` para |
+
+Desde a [ADR-005](adr/ADR-005-railway-nos-dois-ambientes.md) as duas instâncias estão no
+mesmo fornecedor, o que torna a plataforma um ponto único de falha. Trocar de fornecedor não
+eliminou o modo de falha de outubro, apenas o moveu, e é por isso que estas duas linhas
+importam mais, e não menos, do que antes.
 
 Confira na véspera, não no dia. A reconstrução exige recriar três credenciais e reemitir a
 chave de API, e isso não se faz em cima da hora.

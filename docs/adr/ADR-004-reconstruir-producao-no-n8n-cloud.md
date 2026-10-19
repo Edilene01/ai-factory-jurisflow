@@ -1,9 +1,10 @@
 # ADR-004: Reconstruir produção no n8n Cloud, em instância nova
 
-* **Status:** aceita
+* **Status:** substituída pela ADR-005
 * **Data:** 19/10/2026
 * **Decisora:** Edilene Chagas Faria
 * **Substitui:** ADR-003
+* **Substituída por:** [ADR-005](ADR-005-railway-nos-dois-ambientes.md), no mesmo dia, ao se descobrir que a conta em período de teste do n8n Cloud não libera a API pública, o que torna inalcançável o primeiro critério de validação desta ADR
 * **Depende de:** ADR-001
 
 ## Contexto e definição do problema

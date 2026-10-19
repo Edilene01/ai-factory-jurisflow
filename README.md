@@ -4,7 +4,8 @@ Triagem automática de formulários de intake jurídico: recebe o caso, classifi
 urgência, devolve um protocolo ao cliente e entrega o caso ao time responsável no Slack,
 com a identidade do solicitante mascarada.
 
-**URL pública:** `https://contatestes-01.app.n8n.cloud/webhook/intake` — **fora do ar desde outubro de 2026.** A instância deixou de existir no n8n Cloud e responde "404 – No instance here". O restabelecimento é o Bloco 0 do [checklist da Etapa 2](docs/checklist-etapa-2.md).
+**URL pública:** https://n8n-production-81314.up.railway.app/webhook/intake
+*A instância anterior, no n8n Cloud, deixou de existir em outubro de 2026. A [ADR-005](docs/adr/ADR-005-railway-nos-dois-ambientes.md) registra por que produção passou para o Railway.*
 **Estado da entrega:** ver [`docs/estado-da-entrega.md`](docs/estado-da-entrega.md), que registra o que está verificado e o que ainda não está
 **Status:** v1.0.0 · [CHANGELOG](CHANGELOG.md) · [Releases](../../releases)
 
@@ -50,10 +51,12 @@ e de containers. As decisões que levaram a esse desenho estão registradas em
 [`docs/adr/`](docs/adr/), e a matriz que sustenta a escolha de stack em
 [`docs/matriz-decisao-stack.md`](docs/matriz-decisao-stack.md).
 
-Em resumo: produção no n8n Cloud e desenvolvimento em container n8n no Railway, com secrets
-distintos em cada ambiente, workflow versionado em Git como fonte da verdade e publicação por
-API. A ADR-003 registra por que os dois ambientes ficaram em plataformas diferentes, e o que
-se perde com isso.
+Em resumo: produção e desenvolvimento em instâncias Railway distintas, com a mesma imagem
+fixada, secrets próprios em cada ambiente, workflow versionado em Git como fonte da verdade e
+publicação por API. A [ADR-005](docs/adr/ADR-005-railway-nos-dois-ambientes.md) registra por
+que os dois ambientes voltaram para a mesma plataforma, o que isso recupera em paridade e o
+que custa em operação. As ADR-002 a ADR-004 ficam no repositório como histórico da decisão,
+e não como descrição do que está no ar.
 
 ## Como rodar localmente
 
