@@ -24,7 +24,9 @@ Sem URL viva não há métrica, alerta nem medição de otimização.
 | Mover os *secrets* para o *Environment* certo | Pendente. A chave de API e o segredo de webhook que hoje estão em `desenvolvimento` pertencem agora a `producao` |
 | *Pipeline* de CI/CD | **Vermelho** nas seis execuções anteriores. O *job* de qualidade passa; o deploy falhava por `HTTP 401` contra a instância que não existe mais |
 | Aplicar `db/schema/001_trilha_auditoria.sql` nos dois bancos | Pendente |
-| Anotar o prazo das assinaturas Railway | Pendente, tabela em [`rotacao-credenciais.md`](rotacao-credenciais.md) |
+| Plano do Railway | **Hobby assinado em 19/10/2026.** O período de teste estava em 2 dias de saldo e teria derrubado produção |
+| Registrar a situação das assinaturas | **Feito**, tabela em [`rotacao-credenciais.md`](rotacao-credenciais.md) |
+| Operar o desenvolvimento sob demanda | Decidido por custo: o serviço fica **parado** e é ligado só quando preciso. Ordem: ligar → *push* em `develop` → conferir deploy e *smoke tests* → desligar |
 
 ## Bloco 1 — Credenciais e LGPD (50% da nota)
 
@@ -55,7 +57,7 @@ Sem URL viva não há métrica, alerta nem medição de otimização.
 | Cinco métricas: latência p50, p95 e p99; custo; erro; volume; qualidade | Pendente |
 | *Thresholds* definidos e justificados para o contexto | Pendente |
 | Alerta funcional, com prioridade (P1/P2/P3), público e canal | **Primeiro alerta definido**: P2 em `#juris-ops`, para quem opera a plataforma, disparado quando a purga de retenção não roda ou deixa registro vencido. Falta executá-lo de verdade e capturar a evidência |
-| Dashboard curado e linkado no README | Pendente |
+| Dashboard curado e linkado no README | Pendente. O plano Hobby do Railway inclui métricas, logs e **alertas nativos**, com 7 dias de retenção de log. É a fonte natural das métricas de infraestrutura; a série histórica mais longa fica na trilha de auditoria em Postgres |
 | Automatizar as verificações mensais da política de retenção | Pendente, descrito na seção 4 da política |
 
 ## Bloco 3 — Otimização medida (parte dos 25%)

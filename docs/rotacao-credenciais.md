@@ -83,10 +83,15 @@ sem emitir erro de aplicação. Em outubro de 2026 a instância de produção no
 de existir por término de assinatura, e nada no repositório percebeu. A ADR-004 registra a
 decisão e manda anotar o prazo aqui, ao lado das credenciais, porque é onde se olha.
 
-| Assinatura | Ambiente | Vence em | Consequência de vencer |
+| Assinatura | Ambiente | Situação | Consequência de falhar |
 |---|---|---|---|
-| Railway | produção | `<preencher>` | A instância hiberna ou é removida, a URL pública cai e o deploy em `main` para |
-| Railway | desenvolvimento | `<preencher ao criar a instância>` | A instância cai e o deploy em `develop` para |
+| Railway Hobby | produção | **Ativa desde 19/10/2026.** Renova mensalmente, US$ 5 mais o uso que exceder o crédito incluído | A instância hiberna ou é removida, a URL pública cai e o deploy em `main` para |
+| Railway Hobby | desenvolvimento | Mesmo plano, environment próprio. Serviço mantido **parado** fora das janelas de uso | Com o serviço parado, o deploy em `develop` falha por não alcançar a instância. É esperado, não é incidente |
+
+O período de teste chegou a 2 dias de saldo antes da assinatura, e teria derrubado produção
+pela segunda vez em um mês. A lição que fica é a mesma da [ADR-004](adr/ADR-004-reconstruir-producao-no-n8n-cloud.md):
+o que vence em silêncio precisa de um lugar onde alguém olhe. Cartão vencido ou cobrança
+recusada produzem exatamente o mesmo efeito que o fim do período de teste.
 
 Desde a [ADR-005](adr/ADR-005-railway-nos-dois-ambientes.md) as duas instâncias estão no
 mesmo fornecedor, o que torna a plataforma um ponto único de falha. Trocar de fornecedor não
