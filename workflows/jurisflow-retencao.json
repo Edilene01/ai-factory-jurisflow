@@ -1,0 +1,161 @@
+{
+  "name": "JurisFlow - Retenção e Expurgo v1.0",
+  "nodes": [
+    {
+      "id": "agenda-diaria",
+      "name": "Agenda Diária 03:15",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300],
+      "notes": "03:15 em America/Sao_Paulo. Fora da janela de intake, que concentra horário comercial, e depois da virada do dia, para que o corte por data seja sempre do dia anterior fechado.",
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "15 3 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "purgar-execucoes",
+      "name": "Purgar Execuções com Erro (72h)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [500, 300],
+      "notes": "PC-02 e PC-08 do mapa de dados pessoais. Único ponto onde payload cru, com nome e CPF sem máscara, fica em repouso. Espelha db/retencao/purga_diaria.sql, bloco 1.",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "postgres": {
+          "id": "",
+          "name": "JurisFlow Postgres"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH removidas AS (\n    DELETE FROM execution_entity\n     WHERE \"startedAt\" < now() - INTERVAL '72 hours'\n    RETURNING 1\n)\nINSERT INTO jurisflow_purga_log (alvo, prazo, linhas_removidas, origem_execucao, observacao)\nSELECT 'execution_entity',\n       '72 horas',\n       count(*),\n       'agendada',\n       'segunda barreira do pruning nativo do n8n'\n  FROM removidas\nRETURNING alvo, prazo, linhas_removidas, executado_em;",
+        "options": {}
+      }
+    },
+    {
+      "id": "purgar-trilha",
+      "name": "Purgar Trilha de Auditoria (12m)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [760, 300],
+      "notes": "PC-07 do mapa de dados pessoais. Registro pseudonimizado, prazo mais longo porque sustenta a série histórica de latência, custo e volume. Espelha db/retencao/purga_diaria.sql, bloco 2.",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "postgres": {
+          "id": "",
+          "name": "JurisFlow Postgres"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH removidas AS (\n    DELETE FROM jurisflow_trilha_auditoria\n     WHERE recebido_em < now() - INTERVAL '12 months'\n    RETURNING 1\n)\nINSERT INTO jurisflow_purga_log (alvo, prazo, linhas_removidas, origem_execucao)\nSELECT 'jurisflow_trilha_auditoria',\n       '12 meses',\n       count(*),\n       'agendada'\n  FROM removidas\nRETURNING alvo, prazo, linhas_removidas, executado_em;",
+        "options": {}
+      }
+    },
+    {
+      "id": "consolidar",
+      "name": "Consolidar Relatório",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1020, 300],
+      "parameters": {
+        "jsCode": "// Junta o resultado dos dois blocos de purga em uma linha só, que é o que vai\n// para o canal de operação. Nenhum dado removido aparece aqui: o relatório\n// carrega contagem, prazo e alvo, e nada mais.\nfunction primeira(nomeDoNo) {\n  try {\n    const itens = $(nomeDoNo).all();\n    return itens.length ? itens[0].json : null;\n  } catch (erro) {\n    return null;\n  }\n}\n\nconst execucoes = primeira('Purgar Execuções com Erro (72h)');\nconst trilha = $json || null;\n\nconst linhas = [];\nlet total = 0;\nlet falhou = false;\n\nfor (const r of [execucoes, trilha]) {\n  if (!r || r.linhas_removidas === undefined) {\n    falhou = true;\n    continue;\n  }\n  const n = Number(r.linhas_removidas) || 0;\n  total += n;\n  linhas.push(`• ${r.alvo} (${r.prazo}): ${n} removida(s)`);\n}\n\n// Um alerta que dispara todo dia vira ruído e deixa de ser lido. O relatório\n// diário só vai ao canal quando houve remoção ou quando algum bloco falhou;\n// nos demais dias, a execução fica registrada no histórico do n8n e basta.\nconst deveNotificar = falhou || total > 0;\n\nreturn [{\n  json: {\n    executado_em: new Date().toISOString(),\n    total_removido: total,\n    detalhe: linhas.join('\\n') || 'nenhum bloco retornou contagem',\n    falhou,\n    deve_notificar: deveNotificar,\n    severidade: falhou ? 'P2' : 'informativo',\n  },\n}];"
+      }
+    },
+    {
+      "id": "precisa-notificar",
+      "name": "Precisa Notificar?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1280, 300],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.deve_notificar }}",
+              "value2": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "slack-ops",
+      "name": "Relatar em #juris-ops",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1540, 220],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "slackApi": {
+          "id": "",
+          "name": "Slack JurisFlow Bot"
+        }
+      },
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "#juris-ops",
+        "text": "=:broom: *Purga de retenção* — {{ $json.executado_em }}\n{{ $json.detalhe }}\nTotal removido: {{ $json.total_removido }}{{ $json.falhou ? '\\n:warning: *P2* — um dos blocos não retornou contagem. Conferir a execução no n8n.' : '' }}",
+        "otherOptions": {
+          "link_names": true
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Agenda Diária 03:15": {
+      "main": [[{ "node": "Purgar Execuções com Erro (72h)", "type": "main", "index": 0 }]]
+    },
+    "Purgar Execuções com Erro (72h)": {
+      "main": [[{ "node": "Purgar Trilha de Auditoria (12m)", "type": "main", "index": 0 }]]
+    },
+    "Purgar Trilha de Auditoria (12m)": {
+      "main": [[{ "node": "Consolidar Relatório", "type": "main", "index": 0 }]]
+    },
+    "Consolidar Relatório": {
+      "main": [[{ "node": "Precisa Notificar?", "type": "main", "index": 0 }]]
+    },
+    "Precisa Notificar?": {
+      "main": [
+        [{ "node": "Relatar em #juris-ops", "type": "main", "index": 0 }],
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": false,
+    "saveManualExecutions": true,
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all",
+    "executionTimeout": 300,
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "v1.0.0",
+  "id": "jurisflow-retencao",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [
+    {
+      "name": "lgpd",
+      "id": "2"
+    }
+  ]
+}
