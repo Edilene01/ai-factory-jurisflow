@@ -58,6 +58,26 @@ SELECT 'jurisflow_trilha_auditoria',
   FROM removidas;
 
 -- -----------------------------------------------------------------------------
+-- 2b. Spans do trace (migração 002) · prazo 12 meses
+--
+-- Mesmo prazo e mesma razão da trilha: o span é pseudonimizado, correlacionado
+-- pelo protocolo, e sustenta a série histórica de latência por etapa. Vai em
+-- bloco próprio para que a contagem apareça separada no registro de purga; um
+-- número agregado esconderia qual das duas tabelas parou de ser limpa.
+-- -----------------------------------------------------------------------------
+WITH removidas AS (
+    DELETE FROM jurisflow_trace_span
+     WHERE inicio < now() - INTERVAL '12 months'
+    RETURNING 1
+)
+INSERT INTO jurisflow_purga_log (alvo, prazo, linhas_removidas, origem_execucao)
+SELECT 'jurisflow_trace_span',
+       '12 meses',
+       count(*),
+       'agendada'
+  FROM removidas;
+
+-- -----------------------------------------------------------------------------
 -- 3. Relatório da execução, devolvido ao workflow
 -- -----------------------------------------------------------------------------
 SELECT alvo,

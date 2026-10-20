@@ -53,9 +53,12 @@ Sem URL viva não há métrica, alerta nem medição de otimização.
 
 | Exigência | Status |
 |---|---|
-| Instrumentação com *trace* e *spans* cobrindo o fluxo real | Pendente |
-| Cinco métricas: latência p50, p95 e p99; custo; erro; volume; qualidade | Pendente |
-| *Thresholds* definidos e justificados para o contexto | Pendente |
+| Instrumentação com *trace* e *spans* cobrindo o fluxo real | **Desenhada**: 7 spans, trace id = protocolo, esquema em [`db/schema/002_observabilidade.sql`](../db/schema/002_observabilidade.sql) e plano em [`observabilidade/plano-instrumentacao.md`](observabilidade/plano-instrumentacao.md). Falta aplicar ao workflow |
+| Cinco métricas: latência p50, p95 e p99; custo; erro; volume; qualidade | **Definidas e materializadas** em [`db/metricas/vw_metricas.sql`](../db/metricas/vw_metricas.sql), fonte única para relatório e dashboard |
+| *Thresholds* definidos e justificados para o contexto | **Definidos** em [`observabilidade/metricas-e-thresholds.md`](observabilidade/metricas-e-thresholds.md), cada um com a restrição de origem. ⚠️ **Provisórios**: derivam de cálculo e de restrição do caso, não de medição. A linha de base exige tráfego real |
+| Catálogo de alertas com prioridade, público e canal | **Pronto**: 13 alertas em [`observabilidade/alertas.md`](observabilidade/alertas.md). Só o A-10 está implementado |
+| Lacuna: `latencia_ms` mede até o parse, e o SLA é até o Slack | **Identificada**, correção no passo 4.2 do plano |
+| Lacuna: tokens não são capturados, logo o custo é cálculo e não medição | **Identificada**, correção no passo 4.1 do plano |
 | Alerta funcional, com prioridade (P1/P2/P3), público e canal | **Primeiro alerta definido**: P2 em `#juris-ops`, para quem opera a plataforma, disparado quando a purga de retenção não roda ou deixa registro vencido. Falta executá-lo de verdade e capturar a evidência |
 | Dashboard curado e linkado no README | Pendente. O plano Hobby do Railway inclui métricas, logs e **alertas nativos**, com 7 dias de retenção de log. É a fonte natural das métricas de infraestrutura; a série histórica mais longa fica na trilha de auditoria em Postgres |
 | Automatizar as verificações mensais da política de retenção | Pendente, descrito na seção 4 da política |
