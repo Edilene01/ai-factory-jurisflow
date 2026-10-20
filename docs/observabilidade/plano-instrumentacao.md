@@ -50,20 +50,33 @@ nó de auditoria, que monta o objeto campo a campo.
 
 Sete etapas, cobrindo o caminho inteiro do briefing: formulário até Slack.
 
-| Span | Começa | Termina | Por que medir separado |
-|---|---|---|---|
-| `recepcao` | POST chega no webhook | Autenticação resolvida | Separa recusa por assinatura de falha de aplicação |
-| `sanitizacao` | Entra no `Sanitizar Entrada` | Protocolo gerado e PII removida | É barato; se aparecer no perfil de latência, algo está errado |
-| `classificacao_llm` | Chamada ao provedor | Resposta recebida | **É o trecho que domina a latência e é onde o custo acontece.** Carrega os tokens |
-| `parse` | Entra no `Parse Classificação` | Área normalizada | Isola falha de interpretação de falha do provedor |
-| `resposta` | Entra no `Responder Intake` | HTTP devolvido ao site | O cliente já foi respondido aqui; o que vem depois não o faz esperar |
-| `roteamento` | Decisão de revisão manual | Canal escolhido | Barato, mas é onde o protótipo errava em silêncio |
-| `entrega_slack` | Chamada ao Slack | Mensagem postada | **Fecha o SLA.** Sem este span a latência medida não é a contratada |
+Este plano previa sete spans. Na implementação ficaram **quatro**, e a diferença merece
+explicação, porque é a diferença entre granularidade real e aparência de granularidade.
 
-O `resposta` e o `entrega_slack` correm em paralelo depois do `parse`, como o diagrama C4
-nível 2 já mostra. O SLA do briefing fecha no `entrega_slack`; a experiência do cliente no
-formulário fecha no `resposta`. **São dois números diferentes e os dois importam**, por
-motivos distintos, e por isso o esquema guarda os dois.
+O n8n não expõe, em expressão, o instante de início e fim de cada nó. O que dá para carimbar
+é o relógio dentro dos nós de código que controlamos, e há três deles no caminho. Três
+carimbos mais o início e o fim delimitam quatro trechos, não sete. Emitir sete exigiria
+inventar fronteiras, e span com duração fabricada é pior do que span ausente.
+
+| Span | Delimitado por | Por que medir separado |
+|---|---|---|
+| `sanitizacao` | `recebido_em` → `t_sanitizacao_fim` | É barato; se aparecer no perfil de latência, algo está errado |
+| `classificacao_llm` | `t_sanitizacao_fim` → `t_parse_inicio` | **É o trecho que domina a latência e é onde o custo acontece.** Carrega os tokens |
+| `parse` | `t_parse_inicio` → `t_parse_fim` | Isola falha de interpretação de falha do provedor |
+| `entrega_slack` | `t_parse_fim` → fim da execução | **Fecha o SLA.** Engloba o roteamento, que é barato e não tem carimbo próprio |
+
+O que se perdeu: `recepcao` fica embutido no início de `sanitizacao`, e `roteamento` em
+`entrega_slack`. Nenhum dos dois faz chamada externa, de modo que a latência deles é
+desprezível perto da do provedor, e separá-los renderia dois números perto de zero.
+
+A duração total, de `recebido_em` até o fim, é gravada à parte em `duracao_total_ms`, e é ela
+que mede o SLA. `duracao_resposta_ms` mede até a resposta ao formulário, que é o que o cliente
+espera na tela. São dois números diferentes, e os dois importam.
+
+A resposta ao formulário e a entrega no Slack correm em paralelo depois do `parse`, como o
+diagrama C4 nível 2 já mostra. O SLA do briefing fecha na entrega ao Slack, e por isso a
+montagem da trilha roda **depois** dos seis nós do Slack, e não em paralelo a eles: medir
+antes subestimaria justamente o número contratado.
 
 ---
 

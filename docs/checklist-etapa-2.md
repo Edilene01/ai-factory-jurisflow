@@ -55,7 +55,7 @@ Sem URL viva não há métrica, alerta nem medição de otimização.
 
 | Exigência | Status |
 |---|---|
-| Instrumentação com *trace* e *spans* cobrindo o fluxo real | **Desenhada**: 7 spans, trace id = protocolo, esquema em [`db/schema/002_observabilidade.sql`](../db/schema/002_observabilidade.sql) e plano em [`observabilidade/plano-instrumentacao.md`](observabilidade/plano-instrumentacao.md). Falta aplicar ao workflow |
+| Instrumentação com *trace* e *spans* cobrindo o fluxo real | **Implementada no workflow**: 4 spans medidos, trace id = protocolo, esquema em [`db/schema/002_observabilidade.sql`](../db/schema/002_observabilidade.sql) e plano em [`observabilidade/plano-instrumentacao.md`](observabilidade/plano-instrumentacao.md). Falta aplicar ao workflow |
 | Cinco métricas: latência p50, p95 e p99; custo; erro; volume; qualidade | **Definidas e materializadas** em [`db/metricas/vw_metricas.sql`](../db/metricas/vw_metricas.sql), fonte única para relatório e dashboard |
 | *Thresholds* definidos e justificados para o contexto | **Definidos** em [`observabilidade/metricas-e-thresholds.md`](observabilidade/metricas-e-thresholds.md), cada um com a restrição de origem. ⚠️ **Provisórios**: derivam de cálculo e de restrição do caso, não de medição. A linha de base exige tráfego real |
 | Catálogo de alertas com prioridade, público e canal | **Pronto**: 13 alertas em [`observabilidade/alertas.md`](observabilidade/alertas.md). Só o A-10 está implementado |
