@@ -289,6 +289,19 @@ no n8n e atualize o *secret* do *Environment* certo, lembrando que `producao` e
 Em conta de período de teste do n8n Cloud a API pública não é liberada, e a chave sequer pode
 ser emitida. É o que motivou a [ADR-005](docs/adr/ADR-005-railway-nos-dois-ambientes.md).
 
+### O classificador manda tudo para triagem manual
+
+Veja o `motivo_revisao`, que a resposta do webhook agora devolve. Dois casos já aconteceram:
+
+*"sem objeto JSON reconhecivel | recebido: {"message":"Welcome to the OpenAI API!..."}"* — o
+nó estava chamando a **raiz da API**, e não o endpoint de *chat completions*. Era o nó legado
+`n8n-nodes-base.openAi` typeVersion 1, que quebra no n8n 2.40.5. Substituído por um
+HTTP Request, que não muda de forma entre versões.
+
+*"provedor retornou erro: Incorrect API key provided"* — a credencial `OpenAI JurisFlow` na
+instância tem valor inválido. Chave da OpenAI começa com `sk-`; se não começar, foi colado o
+valor errado. Corrija na interface do n8n.
+
 ### O agendador de retenção não ativa
 
 `Credential not configured: postgres`. Os dois nós de purga precisam da credencial Postgres

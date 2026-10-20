@@ -31,7 +31,7 @@ PADROES_PROIBIDOS = [
 NOS_ESPERADOS = {
     "n8n-nodes-base.webhook": "Webhook de entrada",
     "n8n-nodes-base.code": "Code node",
-    "n8n-nodes-base.openAi": "classificação por LLM",
+    "n8n-nodes-base.httpRequest": "classificação por LLM, via HTTP",
     "n8n-nodes-base.switch": "roteamento por área",
     "n8n-nodes-base.slack": "entrega no Slack",
     "n8n-nodes-base.respondToWebhook": "resposta síncrona ao formulário",
@@ -91,8 +91,13 @@ def main():
           "execuções de sucesso não persistem payload")
 
     # 6. Resiliência declarada no nó de LLM
-    llm = next((n for n in nos if n.get("type") == "n8n-nodes-base.openAi"), None)
+    llm = next((n for n in nos if n.get("type") == "n8n-nodes-base.httpRequest"), None)
     check((llm or {}).get("retryOnFail") is True, "nó de LLM com retry habilitado")
+    # O nó legado n8n-nodes-base.openAi typeVersion 1 resolvia para a raiz da API
+    # no n8n 2.40.5 e devolvia a mensagem de boas-vindas. Não pode voltar.
+    check("n8n-nodes-base.openAi" not in tipos, "sem o nó legado de OpenAI, que quebra por versão")
+    url = ((llm or {}).get("parameters", {}) or {}).get("url", "")
+    check(url.endswith("/v1/chat/completions"), f"nó de LLM aponta para chat completions ({url or 'vazio'})")
 
     # 7. Integridade das conexões e unicidade de IDs
     soltas = []
