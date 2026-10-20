@@ -47,7 +47,7 @@ Não há dado pessoal nele, e apagá-lo destruiria a evidência de que a políti
 
 ## 2. Mecanismos
 
-### 2.1 Pruning nativo do n8n — primeira barreira
+### 2.1 Pruning nativo do n8n — a barreira que de fato executa o prazo
 
 Variáveis de ambiente, já presentes no [`docker-compose.yml`](../../docker-compose.yml) e
 documentadas em [`.env.example`](../../.env.example):
@@ -60,9 +60,17 @@ EXECUTIONS_DATA_PRUNE=true
 EXECUTIONS_DATA_MAX_AGE=72
 ```
 
-A primeira linha é a que mais importa, e é fácil perdê-la de vista: ela determina que a
-execução bem-sucedida **não grava o payload**. Sem ela, todo intake atendido com sucesso
-deixaria nome, CPF e relato no banco.
+**Nem todas pesam igual, e a distinção importa.** As três primeiras já são impostas *por
+workflow*, nas `settings` do JSON versionado, e valem qualquer que seja a configuração da
+instância: `saveDataSuccessExecution: "none"`, `saveDataErrorExecution: "all"` e
+`saveManualExecutions: false`. Elas determinam que a execução bem-sucedida **não grava o
+payload** — sem isso, todo intake atendido deixaria nome, CPF e relato no banco — e esse
+efeito já está em vigor hoje.
+
+As duas últimas, `EXECUTIONS_DATA_PRUNE` e `EXECUTIONS_DATA_MAX_AGE`, **não têm equivalente
+por workflow**: o prazo de expurgo só se configura no ambiente. São elas, portanto, que
+executam a eliminação das 72 horas, e são elas que faltam. As outras três reduzem o que é
+gravado; só estas duas apagam o que foi.
 
 **Pendência conhecida, e ela é mais séria do que este documento supunha.** Ao tentar executar
 a purga em 20/10/2026, o banco devolveu `relation "execution_entity" does not exist`: o n8n
@@ -74,10 +82,17 @@ aplicável nesta configuração**, e as variáveis acima ainda não estão defin
 Hoje, portanto, o prazo de 72 horas do PC-02 e do PC-08 **não tem mecanismo em operação**. É
 a pendência de conformidade mais relevante em aberto.
 
-Dois caminhos a decidir, ambos legítimos:
+Dois caminhos foram considerados:
 
-1. **Definir as variáveis no Railway**, o que ativa o pruning nativo e torna a afirmação verdadeira com uma barreira só.
-2. **Apontar o n8n para este Postgres** (`DB_TYPE=postgresdb` e as variáveis de conexão), o que traz `execution_entity` para cá e restabelece a segunda barreira.
+1. **Definir as variáveis de pruning no Railway**, o que ativa a eliminação nativa e torna a afirmação verdadeira com uma barreira só.
+2. **Apontar o n8n para este Postgres** (`DB_TYPE=postgresdb` e as variáveis de conexão), o que traria `execution_entity` para cá e restabeleceria a segunda barreira.
+
+**Escolhido o caminho 1.** A segunda opção parece mais completa e cobra um preço que ela não
+justifica: trocar o banco do n8n não migra nada, de modo que as quatro credenciais, a chave
+de API e o histórico seriam perdidos e teriam de ser refeitos à mão. A exigência do art. 16 é
+que o dado seja **eliminado no prazo**, não que existam duas barreiras; a segunda é
+redundância de engenharia, desejável e não essencial. Trocar o banco a dias da entrega, para
+ganhar redundância, seria escolher a arquitetura mais bonita em vez da adequada.
 
 Enquanto nenhum dos dois for feito, a purga registra zero com observação explícita em vez de
 falhar, para que a prestação de contas mostre que a execução rodou e por que não havia o que
@@ -114,14 +129,14 @@ psql "$DATABASE_URL" -f db/retencao/purga_diaria.sql
 de retenção. Isso é esperado e não destrói a prova, porque a evidência durável é a linha em
 `jurisflow_purga_log`, não o registro de execução do n8n.
 
-### 2.3 Purga agendada no GitHub Actions — terceira barreira, fora da plataforma
+### 2.3 Purga agendada no GitHub Actions — segunda barreira, fora da plataforma
 
 * Definição: [`.github/workflows/retencao.yml`](../../.github/workflows/retencao.yml)
 * Horário: 07:15 UTC, que é **04:15** em `America/Sao_Paulo`, uma hora depois da via do n8n
 * Secret necessário: `DATABASE_URL` no *Environment* correspondente, mais `SLACK_BOT_TOKEN`
   para o alerta
 
-As duas barreiras anteriores vivem dentro do n8n, e por isso caem junto com ele. Não é
+As barreiras anteriores vivem dentro do n8n, e por isso caem junto com ele. Não é
 hipótese de manual: em outubro de 2026 a instância de produção deixou de existir no n8n
 Cloud, e com ela teria parado qualquer purga agendada lá dentro, sem que nada avisasse. Um
 agendador hospedado fora da plataforma não compartilha esse destino.
