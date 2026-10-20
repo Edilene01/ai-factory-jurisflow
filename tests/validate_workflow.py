@@ -75,11 +75,18 @@ def main():
     check(len(slack) == 6, f"6 destinos no Slack, 5 áreas mais triagem manual (achou {len(slack)})")
 
     switch = next((n for n in nos if n.get("type") == "n8n-nodes-base.switch"), None)
-    regras = (switch or {}).get("parameters", {}).get("rules", {}).get("rules", [])
+    regras = (switch or {}).get("parameters", {}).get("rules", {}).get("values", [])
     check(len(regras) == 5, f"Switch com 5 regras de saída (achou {len(regras)})")
+    # O Switch v1 aceita no máximo 4 saídas, e são cinco áreas. Com ele, a quinta
+    # nunca era entregue e o n8n recusava a execução. Não pode voltar.
+    check(float((switch or {}).get("typeVersion", 0)) >= 3,
+          f"Switch em versão que aceita 5 saídas (typeVersion {(switch or {}).get('typeVersion')})")
+    saidas = {v.get("outputKey") for v in regras}
+    check(saidas == {"Trabalhista", "Civel", "Tributario", "Criminal", "Consumidor"},
+          f"as cinco áreas têm saída nomeada ({sorted(saidas)})")
 
     # 4. O fallback silencioso do protótipo não pode voltar
-    fallback = (switch or {}).get("parameters", {}).get("fallbackOutput")
+    fallback = ((switch or {}).get("parameters", {}).get("options", {}) or {}).get("fallbackOutput")
     check(fallback in (None, "none"),
           "Switch sem fallback silencioso, o desvio é tratado pelo nó de revisão manual")
 
