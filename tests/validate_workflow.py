@@ -114,6 +114,29 @@ def main():
     ids = [n.get("id") for n in nos]
     check(len(ids) == len(set(ids)), "IDs de nós são únicos")
 
+    # 7b. Instrumentação: a medição do SLA precisa fechar DEPOIS do Slack, senão
+    #     mede um pedaço do caminho e chama de ciclo completo.
+    destinos_slack = {
+        alvo["node"]
+        for n in slack
+        for ramo in conexoes.get(n["name"], {}).get("main", [])
+        for alvo in ramo
+    }
+    check(destinos_slack == {"Montar Trilha e Spans"},
+          "os 6 nós do Slack alimentam a montagem da trilha, fechando o SLA na entrega")
+
+    pg = [n for n in nos if n.get("type") == "n8n-nodes-base.postgres"]
+    check(len(pg) == 2, f"dois nós de gravação em Postgres, trilha e spans (achou {len(pg)})")
+    check(all(n.get("onError") == "continueRegularOutput" for n in pg),
+          "gravação de observabilidade não derruba o intake quando falha")
+
+    montagem = next((n for n in nos if n.get("name") == "Montar Trilha e Spans"), None)
+    codigo = (montagem or {}).get("parameters", {}).get("jsCode", "")
+    for campo in ("duracao_total_ms", "tokens_entrada", "tokens_saida"):
+        check(campo in codigo, f"trilha carrega {campo}")
+    check("descricao_caso: " not in codigo and "descricao_sanitizada" not in codigo,
+          "nenhum texto do caso entra na trilha, só a contagem de caracteres")
+
     # 8. Workflow de retenção: os prazos da política precisam estar no agendador,
     #    senão a política vira documento sem execução.
     print()
