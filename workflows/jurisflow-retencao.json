@@ -31,7 +31,7 @@
         500,
         300
       ],
-      "notes": "PC-02 e PC-08 do mapa de dados pessoais. Único ponto onde payload cru, com nome e CPF sem máscara, fica em repouso. Espelha db/retencao/purga_diaria.sql, bloco 1.",
+      "notes": "PC-02 e PC-08 do mapa de dados pessoais. Condicional: o n8n so guarda execucoes neste banco se estiver configurado para Postgres. Sem isso, a tabela nao existe e o DELETE derrubaria a purga antes de chegar a trilha.",
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
@@ -43,7 +43,7 @@
       },
       "parameters": {
         "operation": "executeQuery",
-        "query": "WITH removidas AS (\n    DELETE FROM execution_entity\n     WHERE \"startedAt\" < now() - INTERVAL '72 hours'\n    RETURNING 1\n)\nINSERT INTO jurisflow_purga_log (alvo, prazo, linhas_removidas, origem_execucao, observacao)\nSELECT 'execution_entity',\n       '72 horas',\n       count(*),\n       'agendada',\n       'segunda barreira do pruning nativo do n8n'\n  FROM removidas\nRETURNING alvo, prazo, linhas_removidas, executado_em;",
+        "query": "DO $$\nBEGIN\n  -- O n8n so guarda execucoes neste banco quando esta configurado para usar\n  -- Postgres. Com o armazenamento padrao, em SQLite, a tabela nao existe aqui,\n  -- e o DELETE derrubaria a purga inteira antes de chegar a trilha. O registro\n  -- de zero com observacao preserva a prestacao de contas: a execucao rodou e\n  -- disse por que nao havia o que remover.\n  IF to_regclass('execution_entity') IS NOT NULL THEN\n    WITH removidas AS (\n        DELETE FROM execution_entity\n         WHERE \"startedAt\" < now() - INTERVAL '72 hours'\n        RETURNING 1\n    )\n    INSERT INTO jurisflow_purga_log (alvo, prazo, linhas_removidas, origem_execucao, observacao)\n    SELECT 'execution_entity', '72 horas', count(*), 'agendada',\n           'segunda barreira do pruning nativo do n8n'\n      FROM removidas;\n  ELSE\n    INSERT INTO jurisflow_purga_log (alvo, prazo, linhas_removidas, origem_execucao, observacao)\n    VALUES ('execution_entity', '72 horas', 0, 'agendada',\n            'tabela ausente neste banco: o n8n nao usa este Postgres para execucoes. O prazo de 72h depende do pruning nativo, por EXECUTIONS_DATA_MAX_AGE');\n  END IF;\nEND $$;",
         "options": {}
       }
     },
@@ -68,7 +68,7 @@
       },
       "parameters": {
         "operation": "executeQuery",
-        "query": "WITH removidas AS (\n    DELETE FROM jurisflow_trilha_auditoria\n     WHERE recebido_em < now() - INTERVAL '12 months'\n    RETURNING 1\n)\nINSERT INTO jurisflow_purga_log (alvo, prazo, linhas_removidas, origem_execucao)\nSELECT 'jurisflow_trilha_auditoria', '12 meses', count(*), 'agendada' FROM removidas;\n\nWITH removidas AS (\n    DELETE FROM jurisflow_trace_span\n     WHERE inicio < now() - INTERVAL '12 months'\n    RETURNING 1\n)\nINSERT INTO jurisflow_purga_log (alvo, prazo, linhas_removidas, origem_execucao)\nSELECT 'jurisflow_trace_span', '12 meses', count(*), 'agendada' FROM removidas\nRETURNING alvo, prazo, linhas_removidas, executado_em;",
+        "query": "WITH removidas AS (\n    DELETE FROM jurisflow_trilha_auditoria\n     WHERE recebido_em < now() - INTERVAL '12 months'\n    RETURNING 1\n)\nINSERT INTO jurisflow_purga_log (alvo, prazo, linhas_removidas, origem_execucao)\nSELECT 'jurisflow_trilha_auditoria', '12 meses', count(*), 'agendada' FROM removidas;\n\nWITH removidas AS (\n    DELETE FROM jurisflow_trace_span\n     WHERE inicio < now() - INTERVAL '12 months'\n    RETURNING 1\n)\nINSERT INTO jurisflow_purga_log (alvo, prazo, linhas_removidas, origem_execucao)\nSELECT 'jurisflow_trace_span', '12 meses', count(*), 'agendada' FROM removidas;\n\n-- Relatorio da execucao: le do proprio registro de purga, que e a fonte de\n-- verdade. Ler a saida do ultimo INSERT faria o consolidador enxergar so o\n-- ultimo bloco e nao notificar quando outro bloco removeu alguma coisa.\nSELECT DISTINCT ON (alvo) alvo, prazo, linhas_removidas, executado_em\n  FROM jurisflow_purga_log\n WHERE executado_em >= now() - INTERVAL '2 minutes'\n ORDER BY alvo, id DESC;",
         "options": {}
       }
     },
@@ -82,7 +82,7 @@
         300
       ],
       "parameters": {
-        "jsCode": "// Junta o resultado dos dois blocos de purga em uma linha só, que é o que vai\n// para o canal de operação. Nenhum dado removido aparece aqui: o relatório\n// carrega contagem, prazo e alvo, e nada mais.\nfunction primeira(nomeDoNo) {\n  try {\n    const itens = $(nomeDoNo).all();\n    return itens.length ? itens[0].json : null;\n  } catch (erro) {\n    return null;\n  }\n}\n\nconst execucoes = primeira('Purgar Execuções com Erro (72h)');\nconst trilha = $json || null;\n\nconst linhas = [];\nlet total = 0;\nlet falhou = false;\n\nfor (const r of [execucoes, trilha]) {\n  if (!r || r.linhas_removidas === undefined) {\n    falhou = true;\n    continue;\n  }\n  const n = Number(r.linhas_removidas) || 0;\n  total += n;\n  linhas.push(`• ${r.alvo} (${r.prazo}): ${n} removida(s)`);\n}\n\n// Um alerta que dispara todo dia vira ruído e deixa de ser lido. O relatório\n// diário só vai ao canal quando houve remoção ou quando algum bloco falhou;\n// nos demais dias, a execução fica registrada no histórico do n8n e basta.\nconst deveNotificar = falhou || total > 0;\n\nreturn [{\n  json: {\n    executado_em: new Date().toISOString(),\n    total_removido: total,\n    detalhe: linhas.join('\\n') || 'nenhum bloco retornou contagem',\n    falhou,\n    deve_notificar: deveNotificar,\n    severidade: falhou ? 'P2' : 'informativo',\n  },\n}];"
+        "jsCode": "// Consolida o que a execucao removeu, somando TODAS as linhas que o bloco\n// anterior devolveu do jurisflow_purga_log. Ler apenas $json pegaria so o\n// ultimo bloco de purga: foi assim que, na primeira tentativa, duas linhas\n// removidas da trilha nao dispararam alerta nenhum.\nconst linhas = $input.all().map(function (i) { return i.json; })\n  .filter(function (r) { return r && r.linhas_removidas !== undefined; });\n\nlet total = 0;\nconst detalhe = [];\nfor (const r of linhas) {\n  const n = Number(r.linhas_removidas) || 0;\n  total += n;\n  detalhe.push('• ' + r.alvo + ' (' + r.prazo + '): ' + n + ' removida(s)');\n}\n\nconst falhou = linhas.length === 0;\n\n// Um relatorio que chega todo dia dizendo \"zero removido\" deixa de ser lido em\n// duas semanas, e alerta que ninguem le e pior do que alerta nenhum. So\n// notifica quando houve remocao ou quando a purga nao retornou contagem.\nconst deveNotificar = falhou || total > 0;\n\nreturn [{\n  json: {\n    executado_em: new Date().toISOString(),\n    total_removido: total,\n    blocos: linhas.length,\n    detalhe: detalhe.join('\\n') || 'nenhum bloco retornou contagem',\n    falhou: falhou,\n    deve_notificar: deveNotificar,\n    severidade: falhou ? 'P2' : (total > 0 ? 'P2' : 'informativo'),\n  },\n}];"
       }
     },
     {
@@ -130,6 +130,31 @@
         "text": "=:broom: *Purga de retenção* — {{ $json.executado_em }}\n{{ $json.detalhe }}\nTotal removido: {{ $json.total_removido }}{{ $json.falhou ? '\\n:warning: *P2* — um dos blocos não retornou contagem. Conferir a execução no n8n.' : '' }}",
         "otherOptions": {
           "link_names": true
+        }
+      }
+    },
+    {
+      "id": "disparo-manual",
+      "name": "Disparo Manual",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        240,
+        480
+      ],
+      "notes": "Execucao da purga sob demanda, protegida pela mesma Header Auth do intake. A politica de retencao ja previa rodar a purga a mao; sem este gatilho isso exigia psql e acesso direto ao banco. O risco e baixo por construcao: a purga so remove o que ja passou do prazo declarado, e e idempotente. Serve tambem para demonstrar o alerta A-10 sem esperar as 03:15.",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "retencao",
+        "responseMode": "onReceived",
+        "responseData": "allEntries",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "JurisFlow Webhook Signature"
         }
       }
     }
@@ -190,6 +215,17 @@
           }
         ]
       ]
+    },
+    "Disparo Manual": {
+      "main": [
+        [
+          {
+            "node": "Purgar Execuções com Erro (72h)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -203,7 +239,7 @@
     "timezone": "America/Sao_Paulo",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "v1.1.0",
+  "versionId": "v1.4.1",
   "id": "jurisflow-retencao",
   "meta": {
     "templateCredsSetupCompleted": false

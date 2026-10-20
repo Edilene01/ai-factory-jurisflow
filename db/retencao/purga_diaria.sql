@@ -25,18 +25,29 @@
 -- execution_data e execution_metadata têm chave estrangeira com ON DELETE
 -- CASCADE para execution_entity, de modo que apagar o pai leva os filhos.
 -- -----------------------------------------------------------------------------
-WITH removidas AS (
-    DELETE FROM execution_entity
-     WHERE "startedAt" < now() - INTERVAL '72 hours'
-    RETURNING 1
-)
-INSERT INTO jurisflow_purga_log (alvo, prazo, linhas_removidas, origem_execucao, observacao)
-SELECT 'execution_entity',
-       '72 horas',
-       count(*),
-       'agendada',
-       'segunda barreira do pruning nativo do n8n'
-  FROM removidas;
+DO $$
+BEGIN
+  -- O n8n so guarda execucoes neste banco quando esta configurado para usar
+  -- Postgres. Com o armazenamento padrao, em SQLite, a tabela nao existe aqui,
+  -- e o DELETE derrubaria a purga inteira antes de chegar a trilha. O registro
+  -- de zero com observacao preserva a prestacao de contas: a execucao rodou e
+  -- disse por que nao havia o que remover.
+  IF to_regclass('execution_entity') IS NOT NULL THEN
+    WITH removidas AS (
+        DELETE FROM execution_entity
+         WHERE "startedAt" < now() - INTERVAL '72 hours'
+        RETURNING 1
+    )
+    INSERT INTO jurisflow_purga_log (alvo, prazo, linhas_removidas, origem_execucao, observacao)
+    SELECT 'execution_entity', '72 horas', count(*), 'agendada',
+           'segunda barreira do pruning nativo do n8n'
+      FROM removidas;
+  ELSE
+    INSERT INTO jurisflow_purga_log (alvo, prazo, linhas_removidas, origem_execucao, observacao)
+    VALUES ('execution_entity', '72 horas', 0, 'agendada',
+            'tabela ausente neste banco: o n8n nao usa este Postgres para execucoes. O prazo de 72h depende do pruning nativo, por EXECUTIONS_DATA_MAX_AGE');
+  END IF;
+END $$;
 
 -- -----------------------------------------------------------------------------
 -- 2. Trilha de auditoria (PC-07) · prazo 12 meses

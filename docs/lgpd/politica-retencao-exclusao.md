@@ -64,10 +64,24 @@ A primeira linha é a que mais importa, e é fácil perdê-la de vista: ela dete
 execução bem-sucedida **não grava o payload**. Sem ela, todo intake atendido com sucesso
 deixaria nome, CPF e relato no banco.
 
-**Pendência conhecida:** essas variáveis estão configuradas no ambiente local. Precisam ser
-replicadas nas variáveis da instância do Railway e na de produção, quando esta for
-restabelecida. Enquanto não forem, a primeira barreira existe só na máquina de quem
-desenvolve, e a purga SQL passa a ser a única em operação.
+**Pendência conhecida, e ela é mais séria do que este documento supunha.** Ao tentar executar
+a purga em 20/10/2026, o banco devolveu `relation "execution_entity" does not exist`: o n8n
+**não usa este Postgres** para armazenar as próprias execuções, e sim o armazenamento padrão,
+em SQLite, no volume do Railway. O banco que o JurisFlow criou tem apenas as suas tabelas.
+
+A consequência é direta: **das duas barreiras previstas para as 72 horas, só a primeira é
+aplicável nesta configuração**, e as variáveis acima ainda não estão definidas no Railway.
+Hoje, portanto, o prazo de 72 horas do PC-02 e do PC-08 **não tem mecanismo em operação**. É
+a pendência de conformidade mais relevante em aberto.
+
+Dois caminhos a decidir, ambos legítimos:
+
+1. **Definir as variáveis no Railway**, o que ativa o pruning nativo e torna a afirmação verdadeira com uma barreira só.
+2. **Apontar o n8n para este Postgres** (`DB_TYPE=postgresdb` e as variáveis de conexão), o que traz `execution_entity` para cá e restabelece a segunda barreira.
+
+Enquanto nenhum dos dois for feito, a purga registra zero com observação explícita em vez de
+falhar, para que a prestação de contas mostre que a execução rodou e por que não havia o que
+remover.
 
 ### 2.2 Purga SQL agendada no n8n — segunda barreira
 
@@ -253,7 +267,9 @@ constrangida.
 | Agendamento no n8n | **Publicado** na instância em 19/10/2026, `active: false`. A ativação falha com "Credential not configured: postgres" nos dois nós de purga, e é esse o próximo passo |
 | Agendamento no GitHub Actions | **Escrito e versionado**, nunca executado: falta cadastrar `DATABASE_URL` nos dois *Environments* e expor o Postgres ao *runner* |
 | Variáveis de pruning no ambiente local | **Em vigor**, no `docker-compose.yml` |
-| Variáveis de pruning no Railway e em produção | **Pendente** |
+| Variáveis de pruning no Railway | **Pendente, e bloqueante para o prazo de 72 h**, conforme a seção 2.1 |
+| Alerta A-10 disparando, com evidência | ✅ **Capturado** em 20/10/2026: [`evidencias/2026-10-20-alerta-a10.md`](../evidencias/2026-10-20-alerta-a10.md), com o disparo e a contraprova do silêncio |
+| Gatilho manual da purga | ✅ `POST /webhook/retencao`, sob Header Auth. A política já previa execução sob demanda; sem ele isso exigia acesso direto ao banco |
 | Retenção de 90 dias no Slack | **Pendente**, com evidência a capturar |
 | Trilha de auditoria gravando em Postgres | **Pendente**: o nó `Registro de Auditoria` ainda devolve o registro em memória. Enquanto isso, a purga da trilha roda sobre tabela vazia, e a purga de execuções, que é a que guarda dado sem máscara, roda sobre dado real |
 

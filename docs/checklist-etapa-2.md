@@ -47,7 +47,7 @@ Sem URL viva não há métrica, alerta nem medição de otimização.
 | Expor o Postgres ao *runner* do GitHub, ou decidir não expor | Railway | **Pendente** |
 | Sanitização de PII antes da chamada ao LLM | Nó `Sanitizar Entrada` | **Pronto desde a Etapa 1** |
 | Varredura de segredos no histórico | `gitleaks` no *pipeline* | **Verde** em todas as execuções |
-| Variáveis de pruning em todos os ambientes | `.env.example` e `docker-compose.yml` | **Pendente** no Railway e em produção |
+| Variáveis de pruning em todos os ambientes | `.env.example` e `docker-compose.yml` | ⚠️ **Pendente e bloqueante**: o n8n não usa este Postgres para execuções, logo o prazo de 72 h hoje **não tem mecanismo em operação** |
 | Retenção de 90 dias no Slack, com evidência | `docs/evidencias/` | **Pendente** |
 | Nó de auditoria gravando em Postgres | Workflow de intake | **Pendente**: hoje é sink em memória |
 
@@ -58,10 +58,10 @@ Sem URL viva não há métrica, alerta nem medição de otimização.
 | Instrumentação com *trace* e *spans* cobrindo o fluxo real | **Implementada no workflow**: 4 spans medidos, trace id = protocolo, esquema em [`db/schema/002_observabilidade.sql`](../db/schema/002_observabilidade.sql) e plano em [`observabilidade/plano-instrumentacao.md`](observabilidade/plano-instrumentacao.md). Falta aplicar ao workflow |
 | Cinco métricas: latência p50, p95 e p99; custo; erro; volume; qualidade | **Definidas e materializadas** em [`db/metricas/vw_metricas.sql`](../db/metricas/vw_metricas.sql), fonte única para relatório e dashboard |
 | *Thresholds* definidos e justificados para o contexto | **Definidos** em [`observabilidade/metricas-e-thresholds.md`](observabilidade/metricas-e-thresholds.md), cada um com a restrição de origem. ⚠️ **Provisórios**: derivam de cálculo e de restrição do caso, não de medição. A linha de base exige tráfego real |
-| Catálogo de alertas com prioridade, público e canal | **Pronto**: 13 alertas em [`observabilidade/alertas.md`](observabilidade/alertas.md). Só o A-10 está implementado |
+| Catálogo de alertas com prioridade, público e canal | **Pronto**: 13 alertas em [`observabilidade/alertas.md`](observabilidade/alertas.md). O A-10 está implementado e comprovado |
 | Lacuna: `latencia_ms` mede até o parse, e o SLA é até o Slack | **Identificada**, correção no passo 4.2 do plano |
 | Lacuna: tokens não são capturados, logo o custo é cálculo e não medição | **Identificada**, correção no passo 4.1 do plano |
-| Alerta funcional, com prioridade (P1/P2/P3), público e canal | **Primeiro alerta definido**: P2 em `#juris-ops`, para quem opera a plataforma, disparado quando a purga de retenção não roda ou deixa registro vencido. Falta executá-lo de verdade e capturar a evidência |
+| Alerta funcional, com prioridade (P1/P2/P3), público e canal | ✅ **Disparou de verdade** em 20/10/2026: A-10, P2, `#juris-ops`, com a contraprova de que cala quando não há o que purgar. [`evidencias/2026-10-20-alerta-a10.md`](evidencias/2026-10-20-alerta-a10.md) |
 | Dashboard curado e linkado no README | Pendente. O plano Hobby do Railway inclui métricas, logs e **alertas nativos**, com 7 dias de retenção de log. É a fonte natural das métricas de infraestrutura; a série histórica mais longa fica na trilha de auditoria em Postgres |
 | Automatizar as verificações mensais da política de retenção | Pendente, descrito na seção 4 da política |
 
