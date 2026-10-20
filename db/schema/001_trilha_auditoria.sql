@@ -41,12 +41,10 @@ CREATE TABLE IF NOT EXISTS jurisflow_trilha_auditoria (
         CHECK (protocolo ~ '^JF-[0-9]{8}-[A-Z0-9]{6}$')
 );
 
-COMMENT ON TABLE  jurisflow_trilha_auditoria IS
-    'PC-07 do mapa de dados pessoais. Registro pseudonimizado para observabilidade e para o '
-    'registro das operações de tratamento do art. 37 da LGPD. Retenção: 12 meses.';
+COMMENT ON TABLE jurisflow_trilha_auditoria IS
+    'PC-07 do mapa de dados pessoais. Registro pseudonimizado para observabilidade e para o registro das operações de tratamento do art. 37 da LGPD. Retenção: 12 meses.';
 COMMENT ON COLUMN jurisflow_trilha_auditoria.protocolo IS
-    'Pseudônimo do caso. É a única chave de ligação com o titular, e ela não vive aqui: a '
-    'correspondência entre protocolo e pessoa está no canal do Slack do escritório.';
+    'Pseudônimo do caso. É a única chave de ligação com o titular, e ela não vive aqui: a correspondência entre protocolo e pessoa está no canal do Slack do escritório.';
 COMMENT ON COLUMN jurisflow_trilha_auditoria.caracteres_descricao IS
     'Comprimento do relato. Existe para medir o custo da chamada ao LLM sem guardar o texto.';
 
@@ -75,8 +73,7 @@ CREATE TABLE IF NOT EXISTS jurisflow_purga_log (
 );
 
 COMMENT ON TABLE jurisflow_purga_log IS
-    'Prova de execução da política de retenção. Guarda apenas contagens e o alvo; nunca o '
-    'conteúdo removido. Não é purgado, porque é o registro de prestação de contas.';
+    'Prova de execução da política de retenção. Guarda apenas contagens e o alvo; nunca o conteúdo removido. Não é purgado, porque é o registro de prestação de contas.';
 
 CREATE INDEX IF NOT EXISTS ix_purga_executado_em
     ON jurisflow_purga_log (executado_em DESC);

@@ -90,23 +90,25 @@ COMMENT ON VIEW vw_custo_dia IS
 
 -- Anomalia de custo: compara o dia com a mediana dos 7 anteriores (alerta A-08)
 -- e projeta o mês sobre os últimos 7 dias (alerta A-09).
+-- percentile_cont é agregado de conjunto ordenado, e o PostgreSQL não aceita
+-- OVER() nessa família: a janela precisa vir de um LATERAL, que recalcula a
+-- mediana dos 7 dias anteriores para cada linha.
 CREATE OR REPLACE VIEW vw_custo_anomalia AS
-WITH base AS (
-    SELECT dia, usd_dia,
-           percentile_cont(0.5) WITHIN GROUP (ORDER BY usd_dia) OVER (
-               ORDER BY dia ROWS BETWEEN 7 PRECEDING AND 1 PRECEDING
-           ) AS mediana_7d
-      FROM vw_custo_dia
-)
-SELECT dia,
-       usd_dia,
-       round(mediana_7d, 4)                                           AS mediana_7d,
-       round(usd_dia / nullif(mediana_7d, 0), 2)                      AS razao,
-       (usd_dia > 2 * mediana_7d)                                     AS dispara_a08,
-       round(usd_dia * 30, 2)                                         AS projecao_mensal_usd,
-       (usd_dia * 30 > 30)                                            AS dispara_a09
-  FROM base
- ORDER BY dia DESC;
+SELECT c.dia,
+       c.usd_dia,
+       round(m.mediana_7d, 4)                                         AS mediana_7d,
+       round(c.usd_dia / nullif(m.mediana_7d, 0), 2)                  AS razao,
+       (c.usd_dia > 2 * m.mediana_7d)                                 AS dispara_a08,
+       round(c.usd_dia * 30, 2)                                       AS projecao_mensal_usd,
+       (c.usd_dia * 30 > 30)                                          AS dispara_a09
+  FROM vw_custo_dia c
+  LEFT JOIN LATERAL (
+      SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY a.usd_dia) AS mediana_7d
+        FROM vw_custo_dia a
+       WHERE a.dia <  c.dia
+         AND a.dia >= c.dia - 7
+  ) m ON TRUE
+ ORDER BY c.dia DESC;
 
 -- =============================================================================
 -- MÉTRICA 3 · Taxa de erro
@@ -226,8 +228,10 @@ SELECT count(*)                                                        AS volume
                    / nullif(count(*), 0), 2)                           AS pct_erro,
        round(100.0 * count(*) FILTER (WHERE revisao_manual)
                    / nullif(count(*), 0), 2)                           AS pct_revisao_manual,
-       round(sum(t.tokens_entrada * p.usd_por_1m_in  / 1000000.0
-               + t.tokens_saida   * p.usd_por_1m_out / 1000000.0), 4)  AS usd_24h
+       -- coalesce porque o LEFT JOIN pode nao casar preco: sem ele, uma linha
+       -- sem modelo conhecido anularia a soma inteira em vez de somar zero.
+       round(coalesce(sum(t.tokens_entrada * p.usd_por_1m_in  / 1000000.0
+                        + t.tokens_saida   * p.usd_por_1m_out / 1000000.0), 0), 4) AS usd_24h
   FROM jurisflow_trilha_auditoria t
   LEFT JOIN jurisflow_preco_modelo p ON p.modelo = t.modelo
  WHERE t.recebido_em >= now() - INTERVAL '24 hours';

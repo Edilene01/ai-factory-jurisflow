@@ -98,7 +98,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ status: 'recebido', protocolo: $json.protocolo, area: $json.area, urgencia: $json.urgencia, revisao_manual: $json.revisao_manual }) }}",
+        "responseBody": "={{ JSON.stringify({ status: 'recebido', protocolo: $json.protocolo, area: $json.area, urgencia: $json.urgencia, revisao_manual: $json.revisao_manual, motivo_revisao: $json.motivo_revisao || null }) }}",
         "options": {
           "responseCode": 200
         }
@@ -110,7 +110,8 @@
       "position": [
         1120,
         160
-      ]
+      ],
+      "notes": "motivo_revisao entra na resposta para que a falha seja diagnosticavel de fora, sem depender do historico de execucao, que nao persiste em caso de sucesso. O campo carrega causa tecnica ou o rotulo devolvido pelo modelo, nunca dado do caso."
     },
     {
       "parameters": {
@@ -481,7 +482,7 @@
     "executionTimeout": 120,
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "v1.0.1",
+  "versionId": "v1.0.2",
   "id": "jurisflow-case-intake",
   "meta": {
     "templateCredsSetupCompleted": false
