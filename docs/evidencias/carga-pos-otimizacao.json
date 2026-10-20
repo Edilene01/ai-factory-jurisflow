@@ -1,0 +1,2023 @@
+{
+  "resumo": {
+    "rotulo": "pos-otimizacao",
+    "momento": "2026-10-20T15:27:34+00:00",
+    "url": "https://n8n-production-81314.up.railway.app",
+    "total": 200,
+    "sucesso": 200,
+    "erros": 0,
+    "pct_erro": 0.0,
+    "duracao_s": 75.7,
+    "latencia_p50_ms": 1479,
+    "latencia_p95_ms": 1895,
+    "latencia_p99_ms": 2181,
+    "latencia_min_ms": 1215,
+    "latencia_max_ms": 2618,
+    "latencia_media_ms": 1507,
+    "pct_dentro_sla_60s": 100.0,
+    "pct_acerto_area": 100.0,
+    "pct_revisao_manual": 0.0
+  },
+  "amostras": [
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-B8L5MV",
+      "latencia_ms": 2081,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-QW0111",
+      "latencia_ms": 1982,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-YPCCIQ",
+      "latencia_ms": 2044,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-BPSM71",
+      "latencia_ms": 1803,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-2F2O2F",
+      "latencia_ms": 1330,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-IQL6OY",
+      "latencia_ms": 1539,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-YKEMRU",
+      "latencia_ms": 1626,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-BX6LV3",
+      "latencia_ms": 1426,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-NJ3YY3",
+      "latencia_ms": 1256,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-HWITO2",
+      "latencia_ms": 1216,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-64HVOZ",
+      "latencia_ms": 1265,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-0VZTXQ",
+      "latencia_ms": 1372,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-JEL3PA",
+      "latencia_ms": 1483,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-WAEQHA",
+      "latencia_ms": 1415,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-A1L6JO",
+      "latencia_ms": 1434,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-U0O05Z",
+      "latencia_ms": 1627,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-J8G8UL",
+      "latencia_ms": 1270,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-8M7AER",
+      "latencia_ms": 1347,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-MR8Q0B",
+      "latencia_ms": 1623,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-6BURBB",
+      "latencia_ms": 1547,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-F4T4QE",
+      "latencia_ms": 1534,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-RFAZKT",
+      "latencia_ms": 1634,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-LECPB0",
+      "latencia_ms": 1515,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-G9DX8W",
+      "latencia_ms": 1414,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-LT7O8B",
+      "latencia_ms": 1335,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-7GF5PT",
+      "latencia_ms": 1526,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-SEW86P",
+      "latencia_ms": 1487,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-LETI0Q",
+      "latencia_ms": 1534,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-7E9DDW",
+      "latencia_ms": 1357,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-PW45OZ",
+      "latencia_ms": 1573,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-1D99IQ",
+      "latencia_ms": 1413,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-4OVUMW",
+      "latencia_ms": 1445,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "baixa",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-UTOK38",
+      "latencia_ms": 1373,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-6YRY3T",
+      "latencia_ms": 1440,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-K7NSPO",
+      "latencia_ms": 1446,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-RFXW9M",
+      "latencia_ms": 1539,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-ASXW53",
+      "latencia_ms": 1440,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-IIKGNA",
+      "latencia_ms": 1322,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-LBJQ4V",
+      "latencia_ms": 1304,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-ITTKBR",
+      "latencia_ms": 1439,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-SZIKZF",
+      "latencia_ms": 1384,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-XJWDO4",
+      "latencia_ms": 1689,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-4XK2XK",
+      "latencia_ms": 1450,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-L5SUWD",
+      "latencia_ms": 1505,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-AR31OS",
+      "latencia_ms": 1523,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-33ZV4Y",
+      "latencia_ms": 1366,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-1FTY20",
+      "latencia_ms": 1293,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-NS1JPF",
+      "latencia_ms": 1485,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-RUJPYF",
+      "latencia_ms": 1528,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-IA4DWF",
+      "latencia_ms": 1215,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-2V47ZM",
+      "latencia_ms": 1480,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-V4BQQA",
+      "latencia_ms": 1460,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-TG6XDF",
+      "latencia_ms": 1284,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-B7KE7M",
+      "latencia_ms": 1274,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "baixa",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-9RIPVZ",
+      "latencia_ms": 1357,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-4GP89C",
+      "latencia_ms": 1610,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-FZPHPE",
+      "latencia_ms": 1711,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-QMZCJY",
+      "latencia_ms": 1474,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-YB2YGP",
+      "latencia_ms": 1527,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-JWXOJH",
+      "latencia_ms": 1251,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-73MV32",
+      "latencia_ms": 1481,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-8ANDKN",
+      "latencia_ms": 1321,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-NWK8RO",
+      "latencia_ms": 1513,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-Z015O1",
+      "latencia_ms": 1478,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-XX8BBF",
+      "latencia_ms": 1417,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-Q438W2",
+      "latencia_ms": 1534,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-WRRF1Q",
+      "latencia_ms": 1335,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-01BG75",
+      "latencia_ms": 1357,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-XKBX2U",
+      "latencia_ms": 1492,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-R0996F",
+      "latencia_ms": 1306,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-S5IFK6",
+      "latencia_ms": 2618,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-IGD71B",
+      "latencia_ms": 1342,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-74W2PY",
+      "latencia_ms": 1807,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-JT2BZW",
+      "latencia_ms": 1360,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-U9QCHW",
+      "latencia_ms": 1328,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-0ZOKSX",
+      "latencia_ms": 1350,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-Y1EISU",
+      "latencia_ms": 1690,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "baixa",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-779ULP",
+      "latencia_ms": 1625,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-PF71HK",
+      "latencia_ms": 1571,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-VS8YC0",
+      "latencia_ms": 1633,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-YPB8GZ",
+      "latencia_ms": 1436,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-5LT4WC",
+      "latencia_ms": 1566,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-2WNQED",
+      "latencia_ms": 1586,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-5J1X81",
+      "latencia_ms": 1603,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-B2UUSK",
+      "latencia_ms": 2143,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-5X3DVX",
+      "latencia_ms": 1465,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-NNT5GM",
+      "latencia_ms": 1499,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-B6IZ8I",
+      "latencia_ms": 1685,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-UXUBQI",
+      "latencia_ms": 1456,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-YX89G4",
+      "latencia_ms": 1504,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-NSZD5Q",
+      "latencia_ms": 1419,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-XBRXF3",
+      "latencia_ms": 1603,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-FDXXN8",
+      "latencia_ms": 1627,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-90BMH8",
+      "latencia_ms": 1942,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-8WJTP4",
+      "latencia_ms": 1365,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-LTIBCI",
+      "latencia_ms": 1598,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-QBLCT9",
+      "latencia_ms": 1436,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "baixa",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-UN5M6O",
+      "latencia_ms": 1525,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-JRSNHS",
+      "latencia_ms": 1485,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-ULE82P",
+      "latencia_ms": 1313,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-4FQHHL",
+      "latencia_ms": 1385,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-B4CHHD",
+      "latencia_ms": 2181,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-BXYCT7",
+      "latencia_ms": 1426,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-HQI8JC",
+      "latencia_ms": 1713,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-X7FKGP",
+      "latencia_ms": 1388,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-XUUGJZ",
+      "latencia_ms": 1357,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-KJ7TQT",
+      "latencia_ms": 1286,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-RBG0F0",
+      "latencia_ms": 1558,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-I0HUSD",
+      "latencia_ms": 1375,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-8ORB0H",
+      "latencia_ms": 1375,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-BQ63H4",
+      "latencia_ms": 1382,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-ERB65O",
+      "latencia_ms": 1524,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-EE48D3",
+      "latencia_ms": 1428,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-AC6ZU5",
+      "latencia_ms": 1355,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-S2CTCY",
+      "latencia_ms": 1360,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-58QYXB",
+      "latencia_ms": 1554,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-J60PXB",
+      "latencia_ms": 1573,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-AZ4WIM",
+      "latencia_ms": 1832,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-MKBSUU",
+      "latencia_ms": 1609,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "baixa",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-UGNU16",
+      "latencia_ms": 1460,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-Z87URY",
+      "latencia_ms": 1349,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-LG85BV",
+      "latencia_ms": 1587,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "baixa",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-0YHP8E",
+      "latencia_ms": 1627,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-WLO7HZ",
+      "latencia_ms": 1382,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-LQ0TCY",
+      "latencia_ms": 1386,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-F40GE0",
+      "latencia_ms": 1386,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-40ZGPM",
+      "latencia_ms": 1495,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-RXMHEP",
+      "latencia_ms": 1553,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-M1U0K5",
+      "latencia_ms": 1296,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-NEB4SB",
+      "latencia_ms": 1351,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-CRXLSD",
+      "latencia_ms": 1356,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-J2631G",
+      "latencia_ms": 1378,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-NTR6J3",
+      "latencia_ms": 1355,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-F2OUJD",
+      "latencia_ms": 1433,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-CKN4MW",
+      "latencia_ms": 1459,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-OCDSK0",
+      "latencia_ms": 1351,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-6OV0RH",
+      "latencia_ms": 1310,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-4JLOUF",
+      "latencia_ms": 1323,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-NF23IZ",
+      "latencia_ms": 1619,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-YIR7N6",
+      "latencia_ms": 1349,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "baixa",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-RPYZHH",
+      "latencia_ms": 2076,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-PXJHYB",
+      "latencia_ms": 2042,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-5QV4N4",
+      "latencia_ms": 1446,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-WRWXHY",
+      "latencia_ms": 1558,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-2W77M7",
+      "latencia_ms": 1487,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-W123SM",
+      "latencia_ms": 1500,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-B943K5",
+      "latencia_ms": 1710,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-E0E0S9",
+      "latencia_ms": 1402,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-VTOI6J",
+      "latencia_ms": 1426,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-HQ4JJT",
+      "latencia_ms": 1357,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-10Z7HQ",
+      "latencia_ms": 1650,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-BURDR6",
+      "latencia_ms": 1542,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-09UNRE",
+      "latencia_ms": 1366,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-7VP2FE",
+      "latencia_ms": 1483,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "baixa",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-YC0P48",
+      "latencia_ms": 1548,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-0VSPP2",
+      "latencia_ms": 1362,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-QOE6OE",
+      "latencia_ms": 1662,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-8EN4UR",
+      "latencia_ms": 1635,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-G9OSU0",
+      "latencia_ms": 1497,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-A8VAI5",
+      "latencia_ms": 1391,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-O40BGB",
+      "latencia_ms": 1308,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-Y5CYVC",
+      "latencia_ms": 1682,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-BM456X",
+      "latencia_ms": 1511,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-RB0EDO",
+      "latencia_ms": 1816,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-6F0VMM",
+      "latencia_ms": 1511,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-PJW02O",
+      "latencia_ms": 1679,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-XCYVSO",
+      "latencia_ms": 1551,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-EQDZBJ",
+      "latencia_ms": 1507,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-SAT017",
+      "latencia_ms": 1345,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-X14AMW",
+      "latencia_ms": 1268,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-7DAFSW",
+      "latencia_ms": 1513,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "baixa",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-U770SL",
+      "latencia_ms": 1450,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-9665K4",
+      "latencia_ms": 1423,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-RDDP75",
+      "latencia_ms": 1421,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-U9GQAZ",
+      "latencia_ms": 2218,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-X6YS4T",
+      "latencia_ms": 1548,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-JQJQGL",
+      "latencia_ms": 1703,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-9YRSH5",
+      "latencia_ms": 1412,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-NQ6QSA",
+      "latencia_ms": 1736,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-JR3330",
+      "latencia_ms": 1328,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-L6TUUX",
+      "latencia_ms": 1252,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-IP7WFJ",
+      "latencia_ms": 1798,
+      "erro": null
+    },
+    {
+      "esperado": "Consumidor",
+      "obtido": "Consumidor",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-G5QRC6",
+      "latencia_ms": 1516,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-W21TEI",
+      "latencia_ms": 1331,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-MFKFLA",
+      "latencia_ms": 1593,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-B0P4WA",
+      "latencia_ms": 1815,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-GNLKNJ",
+      "latencia_ms": 1448,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-WQTK79",
+      "latencia_ms": 1629,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-8QK9PP",
+      "latencia_ms": 1623,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-LUTCBL",
+      "latencia_ms": 1559,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-A5TO0J",
+      "latencia_ms": 1519,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-2F5C6L",
+      "latencia_ms": 1485,
+      "erro": null
+    },
+    {
+      "esperado": "Criminal",
+      "obtido": "Criminal",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-5XR1XS",
+      "latencia_ms": 1352,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-D0XQP8",
+      "latencia_ms": 1534,
+      "erro": null
+    },
+    {
+      "esperado": "Tributário",
+      "obtido": "Tributário",
+      "urgencia": "baixa",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-HBUA6P",
+      "latencia_ms": 1420,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-L3WY17",
+      "latencia_ms": 1893,
+      "erro": null
+    },
+    {
+      "esperado": "Trabalhista",
+      "obtido": "Trabalhista",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-BP6TT0",
+      "latencia_ms": 1392,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-6OH02C",
+      "latencia_ms": 1473,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "media",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-XY8OIW",
+      "latencia_ms": 1520,
+      "erro": null
+    },
+    {
+      "esperado": "Cível",
+      "obtido": "Cível",
+      "urgencia": "alta",
+      "revisao_manual": false,
+      "motivo": null,
+      "protocolo": "JF-20261020-A2A4XL",
+      "latencia_ms": 1345,
+      "erro": null
+    }
+  ]
+}

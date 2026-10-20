@@ -23,6 +23,11 @@ Todas as mudanças relevantes deste projeto são registradas aqui. O formato seg
 - `tests/validate_workflow.py`: passa a validar também o agendador de retenção e a conferir que os prazos do SQL e do workflow contam a mesma história
 - `.github/workflows/ci-cd.yml`: publica o agendador de retenção nos dois ambientes
 
+### Adicionado — Etapa 2, Bloco 3 (otimização medida)
+- `docs/otimizacoes/001-compressao-do-system-prompt.md`: a otimização com antes e depois, o trade-off e os limites da medição
+- Compressão do *system prompt* de 1.172 para 784 caracteres: **−21,2% de custo por intake**, −21,3% de tokens de entrada, −12,3% no p95 de latência, com acerto de área e taxa de erro inalterados
+- `docs/evidencias/2026-10-20-linha-de-base.md` e os JSON brutos das duas corridas de 200 intakes
+
 ### Adicionado — Etapa 2, Bloco 2 (observabilidade), desenho
 - `docs/observabilidade/metricas-e-thresholds.md`: as cinco métricas com o limite de cada uma e a restrição de que ele deriva. Os thresholds estão marcados como **provisórios**, porque vêm de cálculo e de restrição do caso, e não de medição
 - `docs/observabilidade/plano-instrumentacao.md`: 7 spans cobrindo formulário até Slack, com o protocolo servindo de trace id, e as quatro mudanças necessárias no workflow

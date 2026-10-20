@@ -69,15 +69,14 @@ Sem URL viva não há métrica, alerta nem medição de otimização.
 
 | Exigência | Status |
 |---|---|
-| Medir a linha de base antes de mexer | Pendente |
-| Aplicar uma melhoria: cache, *fallback* de provedor, *retry*, *hybrid search* | Pendente. `.env.example` já reserva `ANTHROPIC_API_KEY` para o *fallback* |
-| Medir depois, com evidência reproduzível | Pendente |
-| Explicar o *trade-off* entre latência, custo e qualidade | Pendente |
+| Medir a linha de base antes de mexer | ✅ **Feito**, 200 intakes, em [`evidencias/2026-10-20-linha-de-base.md`](evidencias/2026-10-20-linha-de-base.md) |
+| Aplicar uma melhoria | ✅ **Compressão do system prompt**, de 1.172 para 784 caracteres |
+| Medir depois, com evidência reproduzível | ✅ **−21,2% de custo por intake**, −12,3% no p95, qualidade mantida. Duas corridas consecutivas, mesma semente |
+| Explicar o *trade-off* entre latência, custo e qualidade | ✅ Em [`otimizacoes/001`](otimizacoes/001-compressao-do-system-prompt.md), incluindo o que a medição **não** prova e a otimização descartada por ser mensurável de forma desonesta |
 
-**Candidata registrada:** substituir a sanitização por expressão regular por reconhecimento de
-entidades nomeadas, para remover nomes próprios e endereços antes da chamada ao provedor.
-Resolve o risco residual da seção 5 do mapa de dados e tem efeito medível em qualidade de
-classificação e em custo de *token*.
+**Candidatas que ficam para depois:** cache de classificação, descartado porque sobre corpus
+sintético repetido mostraria ganho falso; reconhecimento de entidades nomeadas na sanitização,
+que ataca o risco residual da seção 5 do mapa de dados; e *fallback* de provedor.
 
 ## Bloco 4 — README v1.0 e vídeo
 
