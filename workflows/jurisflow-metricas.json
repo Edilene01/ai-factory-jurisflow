@@ -6,7 +6,10 @@
       "name": "Webhook Métricas",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
-      "position": [240, 300],
+      "position": [
+        240,
+        300
+      ],
       "notes": "Protegido pela mesma Header Auth do intake. Serve o painel das cinco métricas em JSON, para o relatório e para o dashboard lerem da mesma consulta. Não devolve nenhum dado pessoal: só agregados e contagens.",
       "parameters": {
         "httpMethod": "GET",
@@ -27,7 +30,10 @@
       "name": "Consultar Painel",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.4,
-      "position": [500, 300],
+      "position": [
+        500,
+        300
+      ],
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 1000,
@@ -40,8 +46,10 @@
       "notes": "Lê de vw_painel_24h, a mesma view que o relatório cita. A rubrica exige que os números batam; a forma de garantir isso é não ter duas fontes.",
       "parameters": {
         "operation": "executeQuery",
-        "options": {},
-        "query": "SELECT json_build_object(\n  'janela', '24h',\n  'gerado_em', now(),\n  'painel', (SELECT row_to_json(p) FROM vw_painel_24h p),\n  'total_trilha', (SELECT count(*) FROM jurisflow_trilha_auditoria),\n  'total_spans', (SELECT count(*) FROM jurisflow_trace_span),\n  'latencia_por_span', (\n     SELECT json_agg(x) FROM (\n       SELECT span,\n              count(*) AS amostras,\n              round(percentile_cont(0.50) WITHIN GROUP (ORDER BY duracao_ms)) AS p50_ms,\n              round(percentile_cont(0.95) WITHIN GROUP (ORDER BY duracao_ms)) AS p95_ms,\n              max(duracao_ms) AS max_ms\n         FROM jurisflow_trace_span\n        WHERE inicio >= now() - INTERVAL '24 hours'\n        GROUP BY span ORDER BY 3 DESC NULLS LAST\n     ) x),\n  'por_area', (\n     SELECT json_agg(x) FROM (\n       SELECT coalesce(area, '(revisao manual)') AS area, count(*) AS intakes\n         FROM jurisflow_trilha_auditoria\n        WHERE recebido_em >= now() - INTERVAL '24 hours'\n        GROUP BY 1 ORDER BY 2 DESC\n     ) x),\n  'purgas_recentes', (\n     SELECT json_agg(x) FROM (\n       SELECT alvo, prazo, linhas_removidas, executado_em\n         FROM jurisflow_purga_log ORDER BY id DESC LIMIT 5\n     ) x)\n) AS painel;"
+        "options": {
+          "queryReplacement": "={{ [ $json.query && $json.query.desde ? $json.query.desde : new Date(Date.now()-86400000).toISOString() ] }}"
+        },
+        "query": "SELECT json_build_object(\n  'janela', $1::text,\n  'gerado_em', now(),\n  'painel', (SELECT row_to_json(x) FROM (\n       SELECT count(*) AS volume,\n              round(percentile_cont(0.50) WITHIN GROUP (ORDER BY duracao_total_ms)) AS p50_ms,\n              round(percentile_cont(0.95) WITHIN GROUP (ORDER BY duracao_total_ms)) AS p95_ms,\n              round(percentile_cont(0.99) WITHIN GROUP (ORDER BY duracao_total_ms)) AS p99_ms,\n              round(percentile_cont(0.95) WITHIN GROUP (ORDER BY duracao_resposta_ms)) AS p95_resposta_ms,\n              round(100.0*count(*) FILTER (WHERE duracao_total_ms <= 60000)/nullif(count(*),0),2) AS pct_dentro_sla,\n              round(100.0*count(*) FILTER (WHERE status = 'erro')/nullif(count(*),0),2) AS pct_erro,\n              round(100.0*count(*) FILTER (WHERE revisao_manual)/nullif(count(*),0),2) AS pct_revisao_manual,\n              sum(tokens_entrada) AS tokens_entrada, sum(tokens_saida) AS tokens_saida,\n              round(sum(t.tokens_entrada*0.15/1000000.0 + t.tokens_saida*0.60/1000000.0),6) AS usd,\n              round(avg(t.tokens_entrada*0.15/1000000.0 + t.tokens_saida*0.60/1000000.0),8) AS usd_por_intake\n         FROM jurisflow_trilha_auditoria t WHERE recebido_em >= $1::timestamptz) x),\n  'total_trilha', (SELECT count(*) FROM jurisflow_trilha_auditoria),\n  'total_spans', (SELECT count(*) FROM jurisflow_trace_span),\n  'latencia_por_span', (\n     SELECT json_agg(x) FROM (\n       SELECT span,\n              count(*) AS amostras,\n              round(percentile_cont(0.50) WITHIN GROUP (ORDER BY duracao_ms)) AS p50_ms,\n              round(percentile_cont(0.95) WITHIN GROUP (ORDER BY duracao_ms)) AS p95_ms,\n              max(duracao_ms) AS max_ms\n         FROM jurisflow_trace_span\n        WHERE inicio >= $1::timestamptz\n        GROUP BY span ORDER BY 3 DESC NULLS LAST\n     ) x),\n  'por_area', (\n     SELECT json_agg(x) FROM (\n       SELECT coalesce(area, '(revisao manual)') AS area, count(*) AS intakes\n         FROM jurisflow_trilha_auditoria\n        WHERE recebido_em >= $1::timestamptz\n        GROUP BY 1 ORDER BY 2 DESC\n     ) x),\n  'purgas_recentes', (\n     SELECT json_agg(x) FROM (\n       SELECT alvo, prazo, linhas_removidas, executado_em\n         FROM jurisflow_purga_log ORDER BY id DESC LIMIT 5\n     ) x)\n) AS painel;"
       }
     },
     {
@@ -49,7 +57,10 @@
       "name": "Responder Métricas",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [760, 300],
+      "position": [
+        760,
+        300
+      ],
       "parameters": {
         "respondWith": "json",
         "responseBody": "={{ JSON.stringify($json.painel) }}",
@@ -61,10 +72,26 @@
   ],
   "connections": {
     "Webhook Métricas": {
-      "main": [[{ "node": "Consultar Painel", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Consultar Painel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Consultar Painel": {
-      "main": [[{ "node": "Responder Métricas", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Responder Métricas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -78,7 +105,7 @@
     "timezone": "America/Sao_Paulo",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "v1.0.0",
+  "versionId": "v1.1.0",
   "id": "jurisflow-metricas",
   "meta": {
     "templateCredsSetupCompleted": false
