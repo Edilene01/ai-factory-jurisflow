@@ -224,28 +224,48 @@ spans, de `recepcao` a `entrega_slack`, no esquema de
 
 ## Otimizações
 
-> **Estado: nenhuma otimização medida ainda.** Esta seção registra a candidata escolhida e o
-> método de medição. Os números de antes e depois entram quando houver tráfego para medir, e
-> inventá-los seria o que a rubrica chama de medição sem evidência.
+### 001 — Compressão do system prompt · **aplicada e medida**
 
-**Candidata:** substituir a sanitização por expressão regular por reconhecimento de entidades
-nomeadas antes da chamada ao provedor.
+A linha de base mostrou que **90% dos tokens de entrada eram o prompt fixo**, reenviado a cada
+requisição: 328 tokens por intake, dos quais a descrição do caso respondia por ~30. O prompt
+foi comprimido de 1.172 para 784 caracteres, preservando o contrato de saída e os critérios.
 
-**Por que esta.** A `sanitizarTexto` remove CPF, CNPJ, e-mail e telefone, e não remove nomes
-próprios, endereços nem nome de empregador. O limite está declarado na seção 5 do mapa de
-dados. A mudança ataca risco de privacidade real e tem efeito mensurável em duas frentes: menos
-tokens enviados, portanto menos custo, e menos ruído no prompt, o que pode melhorar a
-classificação.
+Duas corridas consecutivas de 200 intakes, mesma semente, mesmo corpus:
 
-**Como medir, com honestidade sobre o trade-off.** Três números antes e depois, sobre o mesmo
-conjunto de casos: custo por intake (via `vw_custo_dia`), p95 de latência (via
-`vw_latencia_hora`) e taxa de revisão manual (via `vw_qualidade_dia`). O *trade-off* esperado
-é latência maior em troca de custo menor e privacidade melhor — e se a latência subir além do
-p95 de 60 s, a otimização é rejeitada, porque o SLA é contratual e a melhoria não é.
+| Métrica | Antes | Depois | Variação |
+|---|---|---|---|
+| Custo por intake | US$ 0,00005804 | US$ 0,00004573 | **−21,2%** |
+| Tokens de entrada | 65.638 | 51.638 | −21,3% |
+| Latência p95 | 1.443 ms | 1.266 ms | −12,3% |
+| Acerto de área | 100% | 100% | — |
+| Taxa de erro | 0% | 0% | — |
 
-Alternativas registradas e não escolhidas: cache de classificação por similaridade de
-descrição, e *fallback* de provedor, para o qual o
-[`.env.example`](.env.example) já reserva `ANTHROPIC_API_KEY`.
+**O trade-off, sem maquiagem.** Custo e latência melhoraram juntos, porque menos tokens de
+entrada significam menos cobrança e menos tempo — não houve sacrifício de um pelo outro. O
+risco está na qualidade, e a medição não o cobre bem: o corpus tem doze descrições
+inequívocas, e o lugar onde um prompt mais curto cobraria o preço é o caso ambíguo. A medição
+prova que não piorou nos casos fáceis, e nada diz sobre os difíceis.
+
+E os 21% valem **noventa centavos por mês** a 2.500 intakes diários, de US$ 4,35 para US$ 3,43.
+O que justifica a mudança é o conjunto — custo, latência e manutenibilidade — e não a economia
+isolada.
+
+Análise completa, incluindo a otimização que foi **descartada por ser mensurável de forma
+desonesta**, em [`docs/otimizacoes/001-compressao-do-system-prompt.md`](docs/otimizacoes/001-compressao-do-system-prompt.md).
+
+### Candidatas registradas, não aplicadas
+
+**Cache de classificação.** Descartada nesta etapa por um motivo de método: sobre um corpus
+sintético de doze descrições repetidas, o cache acertaria ~94% das vezes e mostraria um ganho
+espetacular e falso. Em produção, cada pessoa descreve o próprio caso com as próprias
+palavras. Volta à mesa quando houver tráfego real para medir a repetição de verdade.
+
+**Reconhecimento de entidades nomeadas na sanitização**, para remover nomes próprios e
+endereços que a expressão regular não alcança. Ataca o risco residual declarado na seção 5 do
+[mapa de dados](docs/lgpd/mapa-dados-pessoais.md).
+
+**Fallback de provedor**, para o qual o [`.env.example`](.env.example) já reserva
+`ANTHROPIC_API_KEY`. Melhora resiliência, não custo nem latência.
 
 ## Troubleshooting
 
