@@ -126,47 +126,141 @@
     },
     {
       "parameters": {
-        "dataType": "string",
-        "value1": "={{ $json.area_chave }}",
         "rules": {
-          "rules": [
+          "values": [
             {
-              "operation": "equal",
-              "value2": "trabalhista",
-              "output": 0
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cond-trabalhista",
+                    "leftValue": "={{ $json.area_chave }}",
+                    "rightValue": "trabalhista",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Trabalhista"
             },
             {
-              "operation": "equal",
-              "value2": "civel",
-              "output": 1
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cond-civel",
+                    "leftValue": "={{ $json.area_chave }}",
+                    "rightValue": "civel",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Civel"
             },
             {
-              "operation": "equal",
-              "value2": "tributario",
-              "output": 2
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cond-tributario",
+                    "leftValue": "={{ $json.area_chave }}",
+                    "rightValue": "tributario",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Tributario"
             },
             {
-              "operation": "equal",
-              "value2": "criminal",
-              "output": 3
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cond-criminal",
+                    "leftValue": "={{ $json.area_chave }}",
+                    "rightValue": "criminal",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Criminal"
             },
             {
-              "operation": "equal",
-              "value2": "consumidor",
-              "output": 4
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cond-consumidor",
+                    "leftValue": "={{ $json.area_chave }}",
+                    "rightValue": "consumidor",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Consumidor"
             }
           ]
         },
-        "fallbackOutput": "none"
+        "options": {}
       },
       "id": "switch-area",
       "name": "Switch Área",
       "type": "n8n-nodes-base.switch",
-      "typeVersion": 1,
+      "typeVersion": 3.2,
       "position": [
         1300,
         420
-      ]
+      ],
+      "notes": "typeVersion 3.2, e nao 1. O Switch v1 aceita no maximo 4 saidas (0 a 3), e sao cinco areas: a quinta, Consumidor, nunca era entregue e o n8n recusava a execucao com \"The ouput 4 is not allowed\". O defeito veio do prototipo e so apareceu quando o fluxo passou a rodar com volume, porque exigia um caso de Consumidor para se manifestar. A v3 nao tem teto de saidas."
     },
     {
       "parameters": {
