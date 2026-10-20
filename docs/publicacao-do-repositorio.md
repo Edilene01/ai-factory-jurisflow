@@ -75,7 +75,7 @@ n8n de cada instância. O que o GitHub precisa é apenas do suficiente para publ
 ## Passo 6 – Publicar a infraestrutura
 
 No Railway, crie dois projetos, um por ambiente, cada um com o serviço n8n a partir da imagem
-`n8nio/n8n:2.28.7` e um Postgres. Variáveis mínimas por serviço:
+`n8nio/n8n:2.40.5` e um Postgres. Variáveis mínimas por serviço:
 
 ```
 N8N_HOST=<dominio-publico>
