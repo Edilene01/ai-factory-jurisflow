@@ -6,7 +6,10 @@
       "name": "Agenda Diária 03:15",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [240, 300],
+      "position": [
+        240,
+        300
+      ],
       "notes": "03:15 em America/Sao_Paulo. Fora da janela de intake, que concentra horário comercial, e depois da virada do dia, para que o corte por data seja sempre do dia anterior fechado.",
       "parameters": {
         "rule": {
@@ -24,7 +27,10 @@
       "name": "Purgar Execuções com Erro (72h)",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.4,
-      "position": [500, 300],
+      "position": [
+        500,
+        300
+      ],
       "notes": "PC-02 e PC-08 do mapa de dados pessoais. Único ponto onde payload cru, com nome e CPF sem máscara, fica em repouso. Espelha db/retencao/purga_diaria.sql, bloco 1.",
       "retryOnFail": true,
       "maxTries": 3,
@@ -43,11 +49,14 @@
     },
     {
       "id": "purgar-trilha",
-      "name": "Purgar Trilha de Auditoria (12m)",
+      "name": "Purgar Trilha e Spans (12m)",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.4,
-      "position": [760, 300],
-      "notes": "PC-07 do mapa de dados pessoais. Registro pseudonimizado, prazo mais longo porque sustenta a série histórica de latência, custo e volume. Espelha db/retencao/purga_diaria.sql, bloco 2.",
+      "position": [
+        760,
+        300
+      ],
+      "notes": "PC-07 do mapa de dados pessoais, mais os spans do trace da migracao 002. Registro pseudonimizado, prazo mais longo porque sustenta a serie historica de latencia, custo e volume. Espelha db/retencao/purga_diaria.sql, blocos 2 e 2b.",
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
@@ -59,7 +68,7 @@
       },
       "parameters": {
         "operation": "executeQuery",
-        "query": "WITH removidas AS (\n    DELETE FROM jurisflow_trilha_auditoria\n     WHERE recebido_em < now() - INTERVAL '12 months'\n    RETURNING 1\n)\nINSERT INTO jurisflow_purga_log (alvo, prazo, linhas_removidas, origem_execucao)\nSELECT 'jurisflow_trilha_auditoria',\n       '12 meses',\n       count(*),\n       'agendada'\n  FROM removidas\nRETURNING alvo, prazo, linhas_removidas, executado_em;",
+        "query": "WITH removidas AS (\n    DELETE FROM jurisflow_trilha_auditoria\n     WHERE recebido_em < now() - INTERVAL '12 months'\n    RETURNING 1\n)\nINSERT INTO jurisflow_purga_log (alvo, prazo, linhas_removidas, origem_execucao)\nSELECT 'jurisflow_trilha_auditoria', '12 meses', count(*), 'agendada' FROM removidas;\n\nWITH removidas AS (\n    DELETE FROM jurisflow_trace_span\n     WHERE inicio < now() - INTERVAL '12 months'\n    RETURNING 1\n)\nINSERT INTO jurisflow_purga_log (alvo, prazo, linhas_removidas, origem_execucao)\nSELECT 'jurisflow_trace_span', '12 meses', count(*), 'agendada' FROM removidas\nRETURNING alvo, prazo, linhas_removidas, executado_em;",
         "options": {}
       }
     },
@@ -68,7 +77,10 @@
       "name": "Consolidar Relatório",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1020, 300],
+      "position": [
+        1020,
+        300
+      ],
       "parameters": {
         "jsCode": "// Junta o resultado dos dois blocos de purga em uma linha só, que é o que vai\n// para o canal de operação. Nenhum dado removido aparece aqui: o relatório\n// carrega contagem, prazo e alvo, e nada mais.\nfunction primeira(nomeDoNo) {\n  try {\n    const itens = $(nomeDoNo).all();\n    return itens.length ? itens[0].json : null;\n  } catch (erro) {\n    return null;\n  }\n}\n\nconst execucoes = primeira('Purgar Execuções com Erro (72h)');\nconst trilha = $json || null;\n\nconst linhas = [];\nlet total = 0;\nlet falhou = false;\n\nfor (const r of [execucoes, trilha]) {\n  if (!r || r.linhas_removidas === undefined) {\n    falhou = true;\n    continue;\n  }\n  const n = Number(r.linhas_removidas) || 0;\n  total += n;\n  linhas.push(`• ${r.alvo} (${r.prazo}): ${n} removida(s)`);\n}\n\n// Um alerta que dispara todo dia vira ruído e deixa de ser lido. O relatório\n// diário só vai ao canal quando houve remoção ou quando algum bloco falhou;\n// nos demais dias, a execução fica registrada no histórico do n8n e basta.\nconst deveNotificar = falhou || total > 0;\n\nreturn [{\n  json: {\n    executado_em: new Date().toISOString(),\n    total_removido: total,\n    detalhe: linhas.join('\\n') || 'nenhum bloco retornou contagem',\n    falhou,\n    deve_notificar: deveNotificar,\n    severidade: falhou ? 'P2' : 'informativo',\n  },\n}];"
       }
@@ -78,7 +90,10 @@
       "name": "Precisa Notificar?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
-      "position": [1280, 300],
+      "position": [
+        1280,
+        300
+      ],
       "parameters": {
         "conditions": {
           "boolean": [
@@ -95,7 +110,10 @@
       "name": "Relatar em #juris-ops",
       "type": "n8n-nodes-base.slack",
       "typeVersion": 1,
-      "position": [1540, 220],
+      "position": [
+        1540,
+        220
+      ],
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 2000,
@@ -118,21 +136,59 @@
   ],
   "connections": {
     "Agenda Diária 03:15": {
-      "main": [[{ "node": "Purgar Execuções com Erro (72h)", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Purgar Execuções com Erro (72h)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Purgar Execuções com Erro (72h)": {
-      "main": [[{ "node": "Purgar Trilha de Auditoria (12m)", "type": "main", "index": 0 }]]
-    },
-    "Purgar Trilha de Auditoria (12m)": {
-      "main": [[{ "node": "Consolidar Relatório", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Purgar Trilha e Spans (12m)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Consolidar Relatório": {
-      "main": [[{ "node": "Precisa Notificar?", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Precisa Notificar?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Precisa Notificar?": {
       "main": [
-        [{ "node": "Relatar em #juris-ops", "type": "main", "index": 0 }],
+        [
+          {
+            "node": "Relatar em #juris-ops",
+            "type": "main",
+            "index": 0
+          }
+        ],
         []
+      ]
+    },
+    "Purgar Trilha e Spans (12m)": {
+      "main": [
+        [
+          {
+            "node": "Consolidar Relatório",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
@@ -147,7 +203,7 @@
     "timezone": "America/Sao_Paulo",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "v1.0.0",
+  "versionId": "v1.1.0",
   "id": "jurisflow-retencao",
   "meta": {
     "templateCredsSetupCompleted": false
