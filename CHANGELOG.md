@@ -23,6 +23,16 @@ Todas as mudanças relevantes deste projeto são registradas aqui. O formato seg
 - `tests/validate_workflow.py`: passa a validar também o agendador de retenção e a conferir que os prazos do SQL e do workflow contam a mesma história
 - `.github/workflows/ci-cd.yml`: publica o agendador de retenção nos dois ambientes
 
+### Adicionado — Etapa 2, Bloco 2 (observabilidade), desenho
+- `docs/observabilidade/metricas-e-thresholds.md`: as cinco métricas com o limite de cada uma e a restrição de que ele deriva. Os thresholds estão marcados como **provisórios**, porque vêm de cálculo e de restrição do caso, e não de medição
+- `docs/observabilidade/plano-instrumentacao.md`: 7 spans cobrindo formulário até Slack, com o protocolo servindo de trace id, e as quatro mudanças necessárias no workflow
+- `docs/observabilidade/alertas.md`: 13 alertas com prioridade, público, canal e ação esperada
+- `db/schema/002_observabilidade.sql`: colunas de token e de duração total na trilha, e a tabela `jurisflow_trace_span`
+- `db/metricas/vw_metricas.sql`: as cinco métricas como views, fonte única para relatório e dashboard
+
+### Corrigido
+- A purga de 12 meses passa a alcançar `jurisflow_trace_span`, no SQL e no agendador do n8n. Tabela nova sem mecanismo de purga contradiria a política de retenção
+
 ### Alterado — Etapa 2, Bloco 0 (plataforma)
 - **ADR-005**: Railway nos dois ambientes. A instância que servia de desenvolvimento é promovida a produção, por ser a comprovada, e uma segunda instância passa a ser o desenvolvimento. Restaura a paridade que a ADR-003 havia registrado como sua pior consequência
 - **ADR-004 substituída no mesmo dia**: o período de teste do n8n Cloud não libera a API pública, o que torna inalcançável o seu primeiro critério de validação, a publicação sem intervenção manual
