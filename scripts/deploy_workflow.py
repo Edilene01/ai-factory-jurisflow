@@ -29,9 +29,19 @@ def chamar(metodo, caminho, corpo=None):
         headers={"X-N8N-API-KEY": API_KEY, "Content-Type": "application/json"},
         method=metodo,
     )
-    with urllib.request.urlopen(req, timeout=30) as r:
-        bruto = r.read().decode("utf-8")
-        return json.loads(bruto) if bruto else {}
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            bruto = r.read().decode("utf-8")
+            return json.loads(bruto) if bruto else {}
+    except urllib.error.HTTPError as erro:
+        # O corpo é onde o n8n diz o que recusou. Sem ele sobra um 400 sem
+        # causa, que é o tipo de log que custa uma tarde.
+        detalhe = ""
+        try:
+            detalhe = erro.read().decode("utf-8")[:600]
+        except Exception:
+            pass
+        raise RuntimeError(f"{metodo} {caminho} -> HTTP {erro.code}: {detalhe}") from None
 
 
 def preservar_credenciais(payload, atual):
@@ -113,15 +123,9 @@ def main():
     try:
         chamar("POST", f"/api/v1/workflows/{wid}/activate")
         print(f"[ok] workflow ativado, versão {wf.get('versionId', 'sem versionId')}")
-    except urllib.error.HTTPError as erro:
-        # O corpo da resposta é onde o n8n diz qual nó impediu a ativação. Sem
-        # ele, a mensagem vira um 400 sem causa, que é o pior tipo de log.
-        detalhe = ""
-        try:
-            detalhe = json.loads(erro.read().decode("utf-8")).get("message", "")
-        except Exception:
-            pass
-        print(f"[AVISO] não consegui ativar automaticamente: {erro.code}")
+    except RuntimeError as erro:
+        detalhe = str(erro)
+        print("[AVISO] não consegui ativar automaticamente")
         if detalhe:
             print("        " + detalhe.replace("\n", "\n        "))
         print("        Ative pela interface depois de resolver o que está acima.")
