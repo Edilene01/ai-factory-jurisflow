@@ -16,9 +16,10 @@ Sem URL viva não há métrica, alerta nem medição de otimização.
 | Instância de produção | **Promovida**: a instância Railway que servia de desenvolvimento passa a ser produção, por ser a comprovada |
 | Workflow de intake | **Ativo.** Publicado e ativado pelo `deploy_workflow.py` em 19/10/2026 |
 | URL pública | **Responde.** `/healthz` em 200 e `/webhook/intake` recusa chamada anônima com 403 |
-| Smoke tests 1 e 2 | **Passaram** contra a URL pública, pela primeira vez no projeto |
-| Smoke test 3, ponta a ponta | **Autentica e executa** desde 20/10/2026, mas cai em triagem manual: a credencial `OpenAI JurisFlow` na instância tem chave inválida, que não começa com `sk-`. Único item que separa o fluxo de funcionar ponta a ponta. Resolver na interface do n8n |
-| Nó de LLM legado | **Substituído** por HTTP Request. O `n8n-nodes-base.openAi` typeVersion 1 resolvia para a raiz da API no n8n 2.40.5 e devolvia a mensagem de boas-vindas |
+| Smoke tests 1, 2 e 3 | ✅ **Os três passaram** em 20/10/2026, pela primeira vez no projeto. Evidência em [`evidencias/2026-10-20-smoke-e-classificacao.md`](evidencias/2026-10-20-smoke-e-classificacao.md) |
+| Roteamento nas cinco áreas | ✅ **5/5 corretas**, mais o caso ambíguo na tendência prevista. Latências de 1,5 a 3,2 s, todas dentro do SLA de 60 s |
+| Credencial da OpenAI | ✅ **Corrigida** em 20/10/2026. Antes continha valor que nem começava com `sk-` |
+| Nó de LLM legado | ✅ **Substituído** por HTTP Request. O `n8n-nodes-base.openAi` typeVersion 1 resolvia para a raiz da API no n8n 2.40.5 e devolvia a mensagem de boas-vindas |
 | Bug do deploy que apagava credenciais | **Corrigido.** O `deploy_workflow.py` relê os ids da versão publicada e os recoloca antes do PUT |
 | **Criar a segunda instância Railway, para desenvolvimento** | **Pendente, e é o próximo passo.** Mesma imagem `n8nio/n8n:2.40.5`, que é a que produção roda hoje, e as três credenciais com os nomes exatos: `JurisFlow Webhook Signature`, `OpenAI JurisFlow` e `Slack JurisFlow Bot` |
 | Separação de ambientes | ⚠️ **Transitória.** Os dois *Environments* apontam hoje para a mesma URL, porque a instância de desenvolvimento ainda não existe. Enquanto durar, um *push* em `develop` publica em produção. Não use `develop` até a segunda instância estar de pé |

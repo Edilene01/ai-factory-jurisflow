@@ -13,6 +13,7 @@ isso: *rollback* descrito sem evidência não conta.
 | `rollback-03-smoke-tests.png` | Os três smoke tests passando depois da reversão | `<pendente>` |
 | `pipeline-verde.png` | Execução do GitHub Actions concluída, com o tempo total abaixo de cinco minutos | `<pendente>` |
 | `url-publica.png` | A URL pública respondendo, de preferência a partir de outro dispositivo | `<pendente>` |
+| [`2026-10-20-smoke-e-classificacao.md`](2026-10-20-smoke-e-classificacao.md) | Os três smoke tests passando e o roteamento nas cinco áreas, com protocolos e latências | **Pronto** |
 
 ## Como capturar
 
