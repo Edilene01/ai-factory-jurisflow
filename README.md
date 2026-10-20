@@ -7,7 +7,7 @@ com a identidade do solicitante mascarada.
 **URL pública:** https://n8n-production-81314.up.railway.app/webhook/intake
 *A instância anterior, no n8n Cloud, deixou de existir em outubro de 2026. A [ADR-005](docs/adr/ADR-005-railway-nos-dois-ambientes.md) registra por que produção passou para o Railway.*
 **Estado da entrega:** ver [`docs/estado-da-entrega.md`](docs/estado-da-entrega.md), que registra o que está verificado e o que ainda não está
-**Status:** v1.0.0 · [CHANGELOG](CHANGELOG.md) · [Releases](../../releases)
+**README v1.0** · **Versão:** v1.0.0 · [CHANGELOG](CHANGELOG.md) · [Releases](../../releases)
 
 ---
 
@@ -162,6 +162,160 @@ Em resumo, o que o sistema faz hoje:
 
 O estado de implantação de cada item, incluindo o que ainda não roda, está na seção 5 da
 política de retenção.
+
+## Observabilidade
+
+Duas camadas, que respondem perguntas diferentes e não se substituem.
+
+| Camada | Onde | Retenção | Responde |
+|---|---|---|---|
+| Infraestrutura | Painel do Railway, plano Hobby | 7 dias de log | O container está de pé? CPU, memória, rede, reinícios |
+| Aplicação | `jurisflow_trilha_auditoria` e `jurisflow_trace_span`, em Postgres | 12 meses | O fluxo de negócio está saudável? |
+
+Um container saudável que não classifica nenhum caso passa pela primeira camada e é pego
+pela segunda. É por isso que as duas existem.
+
+**Dashboard:** painel do serviço no Railway, para infraestrutura, e as *views* de
+[`db/metricas/vw_metricas.sql`](db/metricas/vw_metricas.sql) para a aplicação. A
+`vw_painel_24h` resume as cinco métricas em uma linha. Relatório e dashboard leem da mesma
+consulta, de propósito: a forma de garantir que os números batem não é conferir duas fontes,
+é não ter duas.
+
+### As cinco métricas
+
+| Métrica | Threshold | De onde sai o número |
+|---|---|---|
+| **Latência** p50 / p95 / p99 | 5 s / 60 s / 110 s | O p95 é o SLA contratado no briefing. O p99 fica abaixo do `executionTimeout` de 120 s, senão mediria execuções abortadas e seria taxa de erro disfarçada |
+| **Custo** | > 2× a mediana de 7 dias, ou projeção mensal > US$ 30 | Linha de base calculada: ~US$ 0,000103 por intake, ~US$ 7,70/mês a 2.500/dia |
+| **Erro** | > 1% em 1 h (P2), > 5% em 15 min (P1) | A 2.500/dia, 1% é pouco mais de um caso perdido por hora, e cada caso é alguém que pediu ajuda e não foi atendido |
+| **Volume** | < 20% da média da mesma hora (P1) | A única métrica que detecta falha silenciosa: se o formulário parar de enviar, não há erro, há ausência |
+| **Qualidade** | revisão manual > 15% em 24 h | O workflow já separa "área não reconhecida" de "resposta malformada", que têm donos diferentes |
+
+Detalhe e justificativa de cada limite em
+[`docs/observabilidade/metricas-e-thresholds.md`](docs/observabilidade/metricas-e-thresholds.md).
+
+> ⚠️ **Os thresholds são provisórios.** Derivam de restrições do caso e de cálculo, não de
+> medição. A linha de base real exige tráfego acumulado. Isso está dito aqui porque número
+> sem evidência não conta.
+
+### Alertas
+
+Treze alertas catalogados em [`docs/observabilidade/alertas.md`](docs/observabilidade/alertas.md),
+cada um com prioridade, público, canal e ação esperada. O público é sempre quem opera a
+plataforma, no canal `#juris-ops`; o que muda é a urgência com que interrompe.
+
+| Nível | Significa | Prazo |
+|---|---|---|
+| P1 | Cliente afetado agora, ou caso se perdendo em silêncio | Imediato, com menção a `@plantao-plataforma` |
+| P2 | Degradação real, sem perda imediata de caso | Mesmo dia útil |
+| P3 | Tendência que merece olhar | Revisão semanal |
+
+**Implementado hoje:** o A-10, em [`.github/workflows/retencao.yml`](.github/workflows/retencao.yml).
+Dispara em P2 quando a purga de retenção removeu alguma coisa — o que significa que a via do
+n8n não rodou e há dado pessoal além do prazo declarado.
+
+### Trace e spans
+
+O *trace id* é o próprio `protocolo`. Não foi criado identificador novo: ele já é único por
+intake, já atravessa o fluxo, já volta ao cliente e já é pseudônimo, o que mantém o
+[mapa de dados pessoais](docs/lgpd/mapa-dados-pessoais.md) válido sem reavaliação. São sete
+spans, de `recepcao` a `entrega_slack`, no esquema de
+[`db/schema/002_observabilidade.sql`](db/schema/002_observabilidade.sql).
+
+## Otimizações
+
+> **Estado: nenhuma otimização medida ainda.** Esta seção registra a candidata escolhida e o
+> método de medição. Os números de antes e depois entram quando houver tráfego para medir, e
+> inventá-los seria o que a rubrica chama de medição sem evidência.
+
+**Candidata:** substituir a sanitização por expressão regular por reconhecimento de entidades
+nomeadas antes da chamada ao provedor.
+
+**Por que esta.** A `sanitizarTexto` remove CPF, CNPJ, e-mail e telefone, e não remove nomes
+próprios, endereços nem nome de empregador. O limite está declarado na seção 5 do mapa de
+dados. A mudança ataca risco de privacidade real e tem efeito mensurável em duas frentes: menos
+tokens enviados, portanto menos custo, e menos ruído no prompt, o que pode melhorar a
+classificação.
+
+**Como medir, com honestidade sobre o trade-off.** Três números antes e depois, sobre o mesmo
+conjunto de casos: custo por intake (via `vw_custo_dia`), p95 de latência (via
+`vw_latencia_hora`) e taxa de revisão manual (via `vw_qualidade_dia`). O *trade-off* esperado
+é latência maior em troca de custo menor e privacidade melhor — e se a latência subir além do
+p95 de 60 s, a otimização é rejeitada, porque o SLA é contratual e a melhoria não é.
+
+Alternativas registradas e não escolhidas: cache de classificação por similaridade de
+descrição, e *fallback* de provedor, para o qual o
+[`.env.example`](.env.example) já reserva `ANTHROPIC_API_KEY`.
+
+## Troubleshooting
+
+Problemas que de fato aconteceram neste projeto, com o sintoma como ele aparece.
+
+### `/webhook/intake` devolve 404
+
+O workflow não está ativo. Webhook de workflow inativo não existe para o n8n, e 404 é a
+resposta honesta. Ative pelo botão **Active** no editor, ou publique pelo
+`scripts/deploy_workflow.py`, que ativa ao final.
+
+Se a instância inteira devolver 404 com a página *"No instance here"*, não é o workflow: a
+instância deixou de existir. Foi o que aconteceu com o n8n Cloud em outubro de 2026, e está
+registrado na [ADR-004](docs/adr/ADR-004-reconstruir-producao-no-n8n-cloud.md).
+
+### O deploy roda, e o workflow para de ativar com "Missing required credential"
+
+Era o defeito mais caro do projeto. Os ids de credencial são próprios de cada instância, e o
+JSON versionado os mantém vazios para não amarrar o repositório a uma instalação. Um `PUT`
+cru apagava o vínculo existente, e **todo deploy automatizado desconfigurava o workflow**.
+
+Corrigido: o `deploy_workflow.py` relê os ids da versão publicada e os recoloca antes de
+enviar. Se ainda aparecer, é credencial que não existe na instância, e aí só a interface
+resolve, porque criar credencial exige o segredo.
+
+### `/webhook/intake` devolve 403 mesmo com o header
+
+O valor da credencial *JurisFlow Webhook Signature* na instância não bate com o
+`JURISFLOW_WEBHOOK_SECRET` que o chamador envia. São dois lugares, e os dois precisam ter o
+mesmo valor: a credencial no n8n e o *secret* do *GitHub Environment* correspondente.
+
+Note que o nome engana: apesar de "Signature", não há assinatura. É comparação de segredo
+compartilhado, e não HMAC do corpo.
+
+### O deploy devolve `HTTP 401 Unauthorized`
+
+A `N8N_API_KEY` do ambiente está inválida ou foi rotacionada. Reemita em **Settings → API**
+no n8n e atualize o *secret* do *Environment* certo, lembrando que `producao` e
+`desenvolvimento` têm conjuntos distintos.
+
+Em conta de período de teste do n8n Cloud a API pública não é liberada, e a chave sequer pode
+ser emitida. É o que motivou a [ADR-005](docs/adr/ADR-005-railway-nos-dois-ambientes.md).
+
+### O agendador de retenção não ativa
+
+`Credential not configured: postgres`. Os dois nós de purga precisam da credencial Postgres
+na instância. Crie-a no n8n apontando para o banco do próprio ambiente.
+
+### Os smoke tests não rodam no Windows
+
+`python3` no Git Bash é o atalho da Microsoft Store, que não executa nada e ainda devolve
+sucesso. O `run_all.sh` agora escolhe um interpretador que funcione; para forçar, use
+`PYTHON=/caminho/do/python bash tests/smoke/run_all.sh`.
+
+### Não há execução nenhuma no histórico do n8n
+
+É o comportamento esperado, não defeito. `saveDataSuccessExecution: "none"` impede que
+execução bem-sucedida grave o *payload*, porque ele contém nome, CPF e o relato do caso. Só
+execução com erro persiste, por 72 horas.
+
+A consequência é que depurar um caso que teve sucesso mas saiu errado exige outro caminho: a
+resposta do webhook devolve `motivo_revisao`, e a trilha de auditoria guarda o registro
+pseudonimizado.
+
+### A instância some depois de algumas semanas
+
+Assinatura encerrada. Aconteceu com o n8n Cloud em outubro de 2026 e quase se repetiu no
+Railway, que chegou a 2 dias de saldo. A tabela de prazos em
+[`docs/rotacao-credenciais.md`](docs/rotacao-credenciais.md) existe por isso: o que vence em
+silêncio precisa de um lugar onde alguém olhe.
 
 ## Operação
 
