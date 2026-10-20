@@ -194,7 +194,8 @@
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 2000
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -222,7 +223,8 @@
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 2000
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -250,7 +252,8 @@
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 2000
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -278,7 +281,8 @@
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 2000
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -306,7 +310,8 @@
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 2000
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -334,11 +339,12 @@
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 2000
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
-        "jsCode": "// Fecha a medicao do ciclo completo e monta as duas linhas que vao ao Postgres.\n// Nada identificavel entra aqui: o objeto e montado campo a campo, e do texto\n// do caso so sobrevive a contagem de caracteres.\nconst d = $('Parse Classificação').first().json;\nconst e = $('Sanitizar Entrada').first().json;\nconst t_fim = Date.now();\nconst t0 = new Date(e.recebido_em).getTime();\n\nconst trilha = {\n  protocolo: d.protocolo,\n  recebido_em: d.recebido_em,\n  latencia_ms: d.latencia_ms,\n  duracao_total_ms: t_fim - t0,\n  duracao_resposta_ms: d.t_parse_fim - t0,\n  area: d.revisao_manual ? null : d.area,\n  urgencia: d.urgencia,\n  revisao_manual: d.revisao_manual,\n  motivo_revisao: d.motivo_revisao || null,\n  origem: d.origem,\n  caracteres_descricao: String(e.descricao_caso || '').length,\n  modelo: d.modelo,\n  tokens_entrada: d.tokens_entrada,\n  tokens_saida: d.tokens_saida,\n  status: d.revisao_manual ? 'revisao_manual' : 'sucesso',\n  causa_falha: null,\n};\n\n// Quatro spans medidos, e nao sete. Os carimbos disponiveis delimitam quatro\n// trechos; declarar sete daria aparencia de granularidade que nao existe.\n// 'entrega_slack' engloba o roteamento, que e barato e nao tem carimbo proprio.\nconst spans = [\n  ['sanitizacao',       t0,                  e.t_sanitizacao_fim],\n  ['classificacao_llm', e.t_sanitizacao_fim, d.t_parse_inicio],\n  ['parse',             d.t_parse_inicio,    d.t_parse_fim],\n  ['entrega_slack',     d.t_parse_fim,       t_fim],\n].map(function (x) {\n  return {\n    protocolo: d.protocolo,\n    span: x[0],\n    inicio: new Date(x[1]).toISOString(),\n    fim: new Date(x[2]).toISOString(),\n    duracao_ms: Math.max(0, x[2] - x[1]),\n    status: d.revisao_manual && x[0] === 'classificacao_llm' ? 'erro' : 'ok',\n  };\n});\n\nreturn [{ json: { trilha: trilha, spans: spans } }];"
+        "jsCode": "// Fecha a medicao do ciclo completo e monta as duas linhas que vao ao Postgres.\n// Nada identificavel entra aqui: o objeto e montado campo a campo, e do texto\n// do caso so sobrevive a contagem de caracteres.\nconst d = $('Parse Classificação').first().json;\nconst e = $('Sanitizar Entrada').first().json;\nconst t_fim = Date.now();\nconst t0 = new Date(e.recebido_em).getTime();\n\n// Com onError continueRegularOutput nos nos do Slack, a falha de entrega chega\n// aqui como item de erro em vez de interromper o fluxo. Registrar isso e o\n// ponto: o caso foi classificado, o formulario respondeu sucesso ao cliente, e\n// ninguem recebeu o caso. E o pior modo de falha do sistema, e o unico que a\n// metrica de erro nao enxergaria se o registro se perdesse junto.\nconst falhouEntrega = !!($json && $json.error);\nconst erroEntrega = falhouEntrega\n  ? String($json.error.message || $json.error).slice(0, 180)\n  : null;\n\nconst trilha = {\n  protocolo: d.protocolo,\n  recebido_em: d.recebido_em,\n  latencia_ms: d.latencia_ms,\n  duracao_total_ms: t_fim - t0,\n  duracao_resposta_ms: d.t_parse_fim - t0,\n  area: d.revisao_manual ? null : d.area,\n  urgencia: d.urgencia,\n  revisao_manual: d.revisao_manual,\n  motivo_revisao: d.motivo_revisao || erroEntrega,\n  origem: d.origem,\n  caracteres_descricao: String(e.descricao_caso || '').length,\n  modelo: d.modelo,\n  tokens_entrada: d.tokens_entrada,\n  tokens_saida: d.tokens_saida,\n  status: falhouEntrega ? 'erro' : (d.revisao_manual ? 'revisao_manual' : 'sucesso'),\n  causa_falha: falhouEntrega ? 'slack' : null,\n};\n\n// Quatro spans medidos, e nao sete. Os carimbos disponiveis delimitam quatro\n// trechos; declarar sete daria aparencia de granularidade que nao existe.\n// 'entrega_slack' engloba o roteamento, que e barato e nao tem carimbo proprio.\nconst spans = [\n  ['sanitizacao',       t0,                  e.t_sanitizacao_fim],\n  ['classificacao_llm', e.t_sanitizacao_fim, d.t_parse_inicio],\n  ['parse',             d.t_parse_inicio,    d.t_parse_fim],\n  ['entrega_slack',     d.t_parse_fim,       t_fim],\n].map(function (x) {\n  return {\n    protocolo: d.protocolo,\n    span: x[0],\n    inicio: new Date(x[1]).toISOString(),\n    fim: new Date(x[2]).toISOString(),\n    duracao_ms: Math.max(0, x[2] - x[1]),\n    status: (x[0] === 'entrega_slack' && falhouEntrega) ? 'erro'\n          : (x[0] === 'classificacao_llm' && d.revisao_manual) ? 'erro'\n          : 'ok',\n  };\n});\n\nreturn [{ json: { trilha: trilha, spans: spans } }];"
       },
       "id": "audit",
       "name": "Montar Trilha e Spans",
@@ -368,14 +374,15 @@
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 1000,
-      "onError": "continueRegularOutput",
       "notes": "Observabilidade nao pode derrubar o intake: falha aqui segue adiante.",
       "parameters": {
         "operation": "executeQuery",
-        "options": {},
-        "query": "INSERT INTO jurisflow_trilha_auditoria\n  (protocolo, recebido_em, latencia_ms, duracao_total_ms, duracao_resposta_ms,\n   area, urgencia, revisao_manual, motivo_revisao, origem, caracteres_descricao,\n   modelo, tokens_entrada, tokens_saida, status, causa_falha)\nSELECT x.protocolo, x.recebido_em::timestamptz, x.latencia_ms, x.duracao_total_ms,\n       x.duracao_resposta_ms, x.area, x.urgencia, x.revisao_manual, x.motivo_revisao,\n       x.origem, x.caracteres_descricao, x.modelo, x.tokens_entrada, x.tokens_saida,\n       x.status, x.causa_falha\n  FROM jsonb_to_record($1::jsonb) AS x(\n       protocolo text, recebido_em text, latencia_ms int, duracao_total_ms int,\n       duracao_resposta_ms int, area text, urgencia text, revisao_manual boolean,\n       motivo_revisao text, origem text, caracteres_descricao int, modelo text,\n       tokens_entrada int, tokens_saida int, status text, causa_falha text)\nON CONFLICT (protocolo) DO NOTHING;",
-        "queryReplacement": "={{ JSON.stringify($json.trilha) }}"
-      }
+        "options": {
+          "queryReplacement": "={{ [JSON.stringify($json.trilha)] }}"
+        },
+        "query": "INSERT INTO jurisflow_trilha_auditoria\n  (protocolo, recebido_em, latencia_ms, duracao_total_ms, duracao_resposta_ms,\n   area, urgencia, revisao_manual, motivo_revisao, origem, caracteres_descricao,\n   modelo, tokens_entrada, tokens_saida, status, causa_falha)\nSELECT x.protocolo, x.recebido_em::timestamptz, x.latencia_ms, x.duracao_total_ms,\n       x.duracao_resposta_ms, x.area, x.urgencia, x.revisao_manual, x.motivo_revisao,\n       x.origem, x.caracteres_descricao, x.modelo, x.tokens_entrada, x.tokens_saida,\n       x.status, x.causa_falha\n  FROM jsonb_to_record($1::jsonb) AS x(\n       protocolo text, recebido_em text, latencia_ms int, duracao_total_ms int,\n       duracao_resposta_ms int, area text, urgencia text, revisao_manual boolean,\n       motivo_revisao text, origem text, caracteres_descricao int, modelo text,\n       tokens_entrada int, tokens_saida int, status text, causa_falha text)\nON CONFLICT (protocolo) DO NOTHING;"
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "id": "gravar-spans",
@@ -395,14 +402,15 @@
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 1000,
-      "onError": "continueRegularOutput",
-      "notes": "Insercao em lote: quatro inserts sincronos por intake acrescentariam latencia a medicao da propria latencia.",
+      "notes": "Le da montagem por referencia explicita: depois do INSERT anterior, $json ja e a saida do Postgres, e nao o item original. Insercao em lote, porque quatro inserts sincronos por intake acrescentariam latencia a medicao da propria latencia.",
       "parameters": {
         "operation": "executeQuery",
-        "options": {},
-        "query": "INSERT INTO jurisflow_trace_span (protocolo, span, inicio, fim, duracao_ms, status)\nSELECT x.protocolo, x.span, x.inicio::timestamptz, x.fim::timestamptz, x.duracao_ms, x.status\n  FROM jsonb_to_recordset($1::jsonb) AS x(\n       protocolo text, span text, inicio text, fim text, duracao_ms int, status text)\nON CONFLICT (protocolo, span) DO NOTHING;",
-        "queryReplacement": "={{ JSON.stringify($json.spans) }}"
-      }
+        "options": {
+          "queryReplacement": "={{ [JSON.stringify($('Montar Trilha e Spans').first().json.spans)] }}"
+        },
+        "query": "INSERT INTO jurisflow_trace_span (protocolo, span, inicio, fim, duracao_ms, status)\nSELECT x.protocolo, x.span, x.inicio::timestamptz, x.fim::timestamptz, x.duracao_ms, x.status\n  FROM jsonb_to_recordset($1::jsonb) AS x(\n       protocolo text, span text, inicio text, fim text, duracao_ms int, status text)\nON CONFLICT (protocolo, span) DO NOTHING;"
+      },
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -611,7 +619,7 @@
     "executionTimeout": 120,
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "v1.1.0",
+  "versionId": "v1.2.2",
   "id": "jurisflow-case-intake",
   "meta": {
     "templateCredsSetupCompleted": false

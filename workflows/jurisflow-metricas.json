@@ -1,0 +1,92 @@
+{
+  "name": "JurisFlow - Métricas v1.0",
+  "nodes": [
+    {
+      "id": "wh-metricas",
+      "name": "Webhook Métricas",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "notes": "Protegido pela mesma Header Auth do intake. Serve o painel das cinco métricas em JSON, para o relatório e para o dashboard lerem da mesma consulta. Não devolve nenhum dado pessoal: só agregados e contagens.",
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "metricas",
+        "responseMode": "responseNode",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "JurisFlow Webhook Signature"
+        }
+      }
+    },
+    {
+      "id": "consultar",
+      "name": "Consultar Painel",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [500, 300],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "credentials": {
+        "postgres": {
+          "id": "",
+          "name": "JurisFlow Postgres"
+        }
+      },
+      "notes": "Lê de vw_painel_24h, a mesma view que o relatório cita. A rubrica exige que os números batam; a forma de garantir isso é não ter duas fontes.",
+      "parameters": {
+        "operation": "executeQuery",
+        "options": {},
+        "query": "SELECT json_build_object(\n  'janela', '24h',\n  'gerado_em', now(),\n  'painel', (SELECT row_to_json(p) FROM vw_painel_24h p),\n  'total_trilha', (SELECT count(*) FROM jurisflow_trilha_auditoria),\n  'total_spans', (SELECT count(*) FROM jurisflow_trace_span),\n  'latencia_por_span', (\n     SELECT json_agg(x) FROM (\n       SELECT span,\n              count(*) AS amostras,\n              round(percentile_cont(0.50) WITHIN GROUP (ORDER BY duracao_ms)) AS p50_ms,\n              round(percentile_cont(0.95) WITHIN GROUP (ORDER BY duracao_ms)) AS p95_ms,\n              max(duracao_ms) AS max_ms\n         FROM jurisflow_trace_span\n        WHERE inicio >= now() - INTERVAL '24 hours'\n        GROUP BY span ORDER BY 3 DESC NULLS LAST\n     ) x),\n  'por_area', (\n     SELECT json_agg(x) FROM (\n       SELECT coalesce(area, '(revisao manual)') AS area, count(*) AS intakes\n         FROM jurisflow_trilha_auditoria\n        WHERE recebido_em >= now() - INTERVAL '24 hours'\n        GROUP BY 1 ORDER BY 2 DESC\n     ) x),\n  'purgas_recentes', (\n     SELECT json_agg(x) FROM (\n       SELECT alvo, prazo, linhas_removidas, executado_em\n         FROM jurisflow_purga_log ORDER BY id DESC LIMIT 5\n     ) x)\n) AS painel;"
+      }
+    },
+    {
+      "id": "responder-metricas",
+      "name": "Responder Métricas",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [760, 300],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json.painel) }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Métricas": {
+      "main": [[{ "node": "Consultar Painel", "type": "main", "index": 0 }]]
+    },
+    "Consultar Painel": {
+      "main": [[{ "node": "Responder Métricas", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": false,
+    "saveManualExecutions": false,
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "all",
+    "executionTimeout": 60,
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "v1.0.0",
+  "id": "jurisflow-metricas",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [
+    {
+      "name": "observabilidade",
+      "id": "3"
+    }
+  ]
+}
