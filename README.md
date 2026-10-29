@@ -413,7 +413,9 @@ silêncio precisa de um lugar onde alguém olhe.
 ## Operação
 
 * *Rollback*: [`docs/rollback.md`](docs/rollback.md), com evidência de execução em [`docs/evidencias/`](docs/evidencias/).
-* Incidente analisado: [`docs/post-mortem-INC-001.md`](docs/post-mortem-INC-001.md).
+* Incidentes analisados: [`INC-001`](docs/post-mortem-INC-001.md), intakes perdidos por
+  resposta do modelo em markdown, e [`INC-002`](docs/post-mortem-INC-002.md), nove dias no ar
+  sem atender ninguém.
 * Material herdado do engenheiro anterior, preservado para rastreabilidade: [`docs/heranca/`](docs/heranca/).
 
 ## Licença
