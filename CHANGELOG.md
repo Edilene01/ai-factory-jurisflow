@@ -4,6 +4,15 @@ Todas as mudanças relevantes deste projeto são registradas aqui. O formato seg
 [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o versionamento segue
 [SemVer](https://semver.org/lang/pt-BR/).
 
+## [Não publicado]
+
+### Adicionado
+- `docs/evidencias/2026-10-29-rollback.md` e `docs/evidencias/rollback-02-deploy-workflow.txt`: o *rollback* executado em produção nos dois sentidos, com os seis passos, os dois protocolos e a saída bruta dos quatro comandos. Reverteu para `v1.2.2`, os três *smoke tests* passaram, voltou para `v1.3.0`, e passaram de novo
+
+### Corrigido
+- O exemplo do nível 1 de `docs/rollback.md` mandava reverter para a `v1.0.0`, cujo workflow usa `n8n-nodes-base.openAi` em `typeVersion 1` — o nó legado que no n8n 2.40.5 devolve a mensagem de boas-vindas em vez da classificação. Seguir o procedimento ao pé da letra durante um incidente trocaria um problema por outro. Passa a apontar para a versão boa anterior, com `f61f667` nomeado como limite seguro para trás
+- A seção de evidência do `rollback.md` afirmava que o procedimento havia sido executado, enquanto o `docs/evidencias/README.md` listava os três arquivos como `<pendente>`. As duas passam a descrever o que existe de fato
+
 ## [2.0.0] – 2026-10-29
 
 A versão que separa o protótipo do produto. É mudança maior porque o estado do sistema trocou
