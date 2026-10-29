@@ -108,7 +108,7 @@ que ataca o risco residual da seção 5 do mapa de dados; e *fallback* de proved
 | Seção de observabilidade | ✅ **Pronta**, com dashboard e números medidos |
 | Seção de otimizações | ✅ **Pronta** |
 | Seção de *troubleshooting* | ✅ **Pronta**, nove cenários |
-| Vídeo de 3 a 5 minutos, com a sua voz | ⏳ **Pendente** |
+| Vídeo de 3 a 5 minutos, com a sua voz | ⏳ **Pendente**. Roteiro em [`roteiro-video-etapa-2.md`](roteiro-video-etapa-2.md), com os quatro itens do enunciado, os tempos e os números a citar |
 | Vídeo mostrando o alerta e o que o dispara | ⏳ **Pendente**. Material em [`evidencias/2026-10-20-alerta-a10.md`](evidencias/2026-10-20-alerta-a10.md) |
 | Vídeo mostrando a sanitização antes da chamada ao LLM | ⏳ **Pendente**. Nó `Sanitizar Entrada`, no editor do n8n |
 | Vídeo mostrando a otimização, antes e depois | ⏳ **Pendente**. Números em [`otimizacoes/001`](otimizacoes/001-compressao-do-system-prompt.md) |
