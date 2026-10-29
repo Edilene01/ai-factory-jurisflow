@@ -4,7 +4,12 @@ Todas as mudanças relevantes deste projeto são registradas aqui. O formato seg
 [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o versionamento segue
 [SemVer](https://semver.org/lang/pt-BR/).
 
-## [Não publicado]
+## [2.0.0] – 2026-10-29
+
+A versão que separa o protótipo do produto. É mudança maior porque o estado do sistema trocou
+de lugar: o n8n deixa o SQLite e passa a viver no Postgres do projeto, com a chave de cifragem
+fixada no ambiente. Quem restaurasse a instância pelo procedimento da v1.0.0 não chegaria ao
+mesmo sistema.
 
 ### Adicionado — Etapa 2, Bloco 1 (LGPD)
 - `docs/lgpd/mapa-dados-pessoais.md`: registro do art. 37 com dez pontos de coleta e tratamento, base legal de cada um, papéis de controlador e operador, três avaliações de legítimo interesse e o mapeamento dos direitos do titular
@@ -37,6 +42,16 @@ Todas as mudanças relevantes deste projeto são registradas aqui. O formato seg
 - `db/schema/002_observabilidade.sql`: colunas de token e de duração total na trilha, e a tabela `jurisflow_trace_span`
 - `db/metricas/vw_metricas.sql`: as cinco métricas como views, fonte única para relatório e dashboard
 
+### Adicionado — operação e recuperação
+- `docs/runbook-recuperacao.md`: procedimento para quando a instância volta vazia, com a tabela do que se perde e do que sobrevive, a tentativa de recuperação antes da reconstrução e as armadilhas que custaram tempo
+- `scripts/restaurar_instancia.py`: publica os três workflows, ativa, aponta qual credencial ficou faltando, roda os *smoke tests* e consulta o painel de métricas
+
+### Alterado — Etapa 2, infraestrutura
+- O n8n passa a usar o Postgres do projeto como banco próprio, conforme a ADR-006, com `N8N_ENCRYPTION_KEY` fixada no ambiente. `execution_entity` volta a existir neste banco, e com ela o prazo de 72 horas ganha a segunda barreira que a política previa
+- Papel `jurisflow_purga` criado no banco e `DATABASE_URL` cadastrada no Environment `producao` apontando para ele, e não para o papel dono
+- Proxy TCP público habilitado no serviço Postgres, que é como o *runner* do GitHub alcança o banco de fora da plataforma
+- Variável `N8N_PUBLIC_URL` do Environment `desenvolvimento` corrigida para a instância de desenvolvimento, que existia desde 19/10 sem estar referenciada. Enquanto apontava para produção, um *push* em `develop` publicava no ambiente errado
+
 ### Corrigido
 - A purga de 12 meses passa a alcançar `jurisflow_trace_span`, no SQL e no agendador do n8n. Tabela nova sem mecanismo de purga contradiria a política de retenção
 
@@ -47,19 +62,22 @@ Todas as mudanças relevantes deste projeto são registradas aqui. O formato seg
 - `docs/estado-da-entrega.md` marcado como registro histórico da Etapa 1
 - Variável `N8N_PUBLIC_URL` do ambiente `producao` apontada para o Railway
 
-### Em aberto na Etapa 1
-- Publicar, no n8n, a troca de Basic Auth para Header Auth no nó Webhook, hoje presente apenas como rascunho no editor
-- Criar o ambiente de desenvolvimento previsto na ADR-003
-- Executar os três smoke tests contra a URL pública
-- Executar o rollback e registrar a evidência em `docs/evidencias/`
+### Resolvido nesta versão, do que estava em aberto
+- Os três *smoke tests* passaram contra a URL pública, e passam dentro do próprio *pipeline*
+- O *deploy* por *push* na `main` fechou verde pela primeira vez, em 32 segundos
+- A instância de produção foi restabelecida, agora sobre Postgres, e a `N8N_API_KEY` reemitida
+- O ambiente de desenvolvimento existe e o Environment passou a apontar para ele
+- A trilha de auditoria grava em Postgres, no lugar do sink em memória
+- As cinco métricas têm *views* materializadas, alerta funcional e dados reais por trás
+- A otimização foi medida, com número antes e depois
 
-### A fazer na Etapa 2
-- Restabelecer a instância de produção, que deixou de existir no n8n Cloud, e registrar a decisão em ADR-004
-- Reemitir a `N8N_API_KEY` e destravar o deploy, hoje em `HTTP 401`
-- Trilha de auditoria persistente em Postgres, substituindo o sink em memória
-- Métricas de latência, custo, erro, volume e qualidade, com alerta configurado
-- Otimização medida, com número antes e depois
-- Fallback de provedor de LLM
+### Em aberto ao fechar a 2.0.0
+- Vídeo de 3 a 5 minutos da Etapa 2
+- *Rollback* executado com evidência em `docs/evidencias/`
+- Postgres próprio para o ambiente de desenvolvimento, que segue em SQLite e quebra a paridade que a ADR-005 comprou
+- Link do *dashboard* no README, hoje descrito mas não linkado
+- Três dos sete *spans* previstos no plano de instrumentação: o workflow mede quatro
+- *Fallback* de provedor de LLM
 
 ## [1.0.0] – 2026-09-18
 
