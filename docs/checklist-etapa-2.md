@@ -47,7 +47,8 @@ Sem URL viva não há métrica, alerta nem medição de otimização.
 | Release SemVer com CHANGELOG | ✅ **v2.0.0** publicada, com GitHub Release |
 | Plano do Railway | **Hobby**, assinado em 19/10/2026 |
 | Registrar a situação das assinaturas | **Feito**, tabela em [`rotacao-credenciais.md`](rotacao-credenciais.md) |
-| Paridade entre os ambientes | ⚠️ **Parcial.** Produção roda sobre Postgres e o desenvolvimento segue em SQLite. O serviço `Postgres-dev` já existe; ligar o n8n de dev a ele custa recriar a conta de dono e as credenciais de lá, pelo motivo da ADR-006 |
+| Paridade entre os ambientes | ✅ **De plataforma, restaurada em 29/10**: os dois rodam n8n 2.40.5 sobre Postgres próprio, cada um com o seu serviço e o seu volume. ⏳ Falta repovoar o desenvolvimento — conta de dono, as quatro credenciais e os workflows —, que a troca de banco zerou, como a ADR-006 previa |
+| Esquema do JurisFlow no banco de desenvolvimento | ⏳ **Pendente.** Colar [`db/migrar_tudo.sql`](../db/migrar_tudo.sql) no console de query do `Postgres-dev`, pelo passo 4 do [runbook](runbook-recuperacao.md) |
 
 ## Bloco 1 — Credenciais e LGPD (50% da nota)
 
@@ -64,7 +65,7 @@ Sem URL viva não há métrica, alerta nem medição de otimização.
 | Segunda via da purga, fora da plataforma | [`.github/workflows/retencao.yml`](../.github/workflows/retencao.yml) | ✅ **Executada em 29/10**, contra produção: 0 removidos, 0 vencidos restantes |
 | Papel de menor privilégio para a purga | [`db/schema/003_papel_purga.sql`](../db/schema/003_papel_purga.sql) | ✅ **Criado e comprovado**: lê a trilha e leva `permission denied` em `credentials_entity` |
 | `DATABASE_URL` no *Environment* `producao` | *GitHub Environments* | ✅ **Cadastrada**, apontando para o papel restrito e não para o dono do banco |
-| `DATABASE_URL` no *Environment* `desenvolvimento` | *GitHub Environments* | ⏳ **Em aberto por decisão.** Só existe um Postgres com dados; apontar o dev para ele faria a purga de `develop` apagar produção |
+| `DATABASE_URL` no *Environment* `desenvolvimento` | *GitHub Environments* | ⏳ **Em aberto por decisão.** O `Postgres-dev` existe desde 29/10 e é privado: o *runner* do GitHub não o alcança sem um proxy TCP público. Expor um banco de desenvolvimento para rodar ali a segunda via da purga é custo sem contrapartida, já que o dev não guarda dado de ninguém — a purga nativa do n8n basta. Fica registrado como decisão, e não como esquecimento |
 | Expor o Postgres ao *runner* do GitHub | Railway | ✅ **Decidido e feito**: proxy TCP público, alcançável só pelo papel `jurisflow_purga` |
 | Sanitização de PII antes da chamada ao LLM | Nó `Sanitizar Entrada` | **Pronto desde a Etapa 1** |
 | Varredura de segredos no histórico | `gitleaks` no *pipeline* | ✅ **Verde**, inclusive depois da reescrita do histórico |
@@ -118,8 +119,8 @@ que ataca o risco residual da seção 5 do mapa de dados; e *fallback* de proved
 1. **O vídeo**, e tudo o que ele precisa mostrar. É o único item da rubrica que não pode ser delegado.
 2. **Retenção de 90 dias no Slack**, com evidência.
 3. **Automatizar as verificações mensais** da política de retenção.
-4. **Paridade do ambiente de desenvolvimento**, que é argumento da ADR-005 e não exigência da rubrica.
-5. **`DATABASE_URL` em `desenvolvimento`**, que depende do item anterior.
+4. **Repovoar o ambiente de desenvolvimento**: esquema no banco, conta de dono, credenciais e workflows. A paridade de plataforma já está feita.
+5. **`DATABASE_URL` em `desenvolvimento`**, que depende de decidir se o banco de dev é exposto ao *runner* do GitHub. Hoje a decisão registrada é não expor.
 
 ## Critérios de anulação, conferir antes de entregar
 

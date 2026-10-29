@@ -9,6 +9,13 @@ Todas as mudanças relevantes deste projeto são registradas aqui. O formato seg
 ### Adicionado
 - `docs/evidencias/2026-10-29-rollback.md` e `docs/evidencias/rollback-02-deploy-workflow.txt`: o *rollback* executado em produção nos dois sentidos, com os seis passos, os dois protocolos e a saída bruta dos quatro comandos. Reverteu para `v1.2.2`, os três *smoke tests* passaram, voltou para `v1.3.0`, e passaram de novo
 
+### Alterado — paridade entre os ambientes
+- O n8n de **desenvolvimento** passa a usar um Postgres próprio, o serviço `Postgres-dev`, com volume e credenciais só dele. Os dois ambientes passam a rodar n8n 2.40.5 sobre Postgres, que é a paridade que a ADR-005 comprou como argumento principal e que a ADR-006 tinha deixado meia, ao mover só produção
+- As oito variáveis foram gravadas com `--skip-deploys` e seguidas de **um** redeploy controlado, em vez de oito. É a mitigação que a ADR-006 registra, aplicada pela primeira vez
+- `EXECUTIONS_DATA_SAVE_ON_ERROR`, que faltava em desenvolvimento, entra junto: as cinco variáveis de retenção agora existem nos dois ambientes
+- Como a ADR-006 previa, a troca zerou o n8n de desenvolvimento. Conta de dono, credenciais e workflows precisam ser refeitos lá, pelo [`runbook-recuperacao.md`](docs/runbook-recuperacao.md)
+- **Decidido não expor o `Postgres-dev` à internet.** O *runner* do GitHub não o alcança sem proxy TCP público, e abrir um banco para rodar a segunda via da purga em um ambiente que não guarda dado de ninguém é custo sem contrapartida. A purga nativa do n8n basta ali
+
 ### Modificado
 - `docs/checklist-etapa-2.md` reescrito. Declarava **18 pendências**, quase todas resolvidas entre 19/10 e 29/10: o *pipeline* como "vermelho nas seis execuções anteriores", a instância de desenvolvimento como "pendente, e é o próximo passo", o nó de auditoria como "sink em memória", as variáveis de *pruning* como "pendente e bloqueante", o dashboard e três seções do README como pendentes. Ficam sete, todas reais: cinco do vídeo, a retenção de 90 dias no Slack e a automação das verificações mensais. A seção de incidente aberto virou incidente encerrado, com o que a apuração não conseguiu provar dito em vez de omitido
 - `README.md`: a seção de observabilidade ganha a subseção **Dashboard**, com o link real do painel do serviço no Railway e os números medidos reproduzidos no próprio arquivo, já que o painel exige login. Infraestrutura da última hora, e aplicação sobre **978 intakes** gravados entre 20/10 e 29/10: p50 1.023 ms, p95 1.395 ms, p99 2.119 ms, 100% dentro do SLA, 0,20% de erro, 0% de revisão manual. Mais o p50 e o p95 por *span*, que mostram a classificação dominando com 796 ms contra menos de 2 ms somados em `parse` e `sanitizacao`
