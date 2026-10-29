@@ -1,0 +1,62 @@
+Rollback em produção — saída bruta
+Data: 2026-10-29, a partir das 20:08 (America/Sao_Paulo)
+Alvo: https://n8n-production-81314.up.railway.app
+Nível 1 do procedimento em docs/rollback.md: reverter o workflow para a versão anterior
+
+================================================================
+1. git checkout 64280ae -- workflows/jurisflow-intake.json
+   arquivo passa de versionId v1.3.0 para v1.2.2
+================================================================
+
+2. python scripts/deploy_workflow.py   (publicando a versão revertida)
+----------------------------------------------------------------
+[ok] 10 vínculo(s) de credencial preservados da instância
+[ok] workflow 'JurisFlow - Case Intake Router v1.0' atualizado (id NShRmkvwV6Zbrse8)
+[ok] workflow ativado, versão v1.2.2
+
+3. bash tests/smoke/run_all.sh   (comprovando o sistema revertido)
+----------------------------------------------------------------
+Interpretador: python
+==============================================
+>> smoke_01_saude.py
+[info] https://n8n-production-81314.up.railway.app/healthz -> 200 em 0.89s | {"status":"ok"}
+[PASS] smoke 1: instância no ar e respondendo
+==============================================
+>> smoke_02_webhook_protegido.py
+[info] https://n8n-production-81314.up.railway.app/webhook/intake recusou com 403
+[PASS] smoke 2: webhook exige assinatura
+==============================================
+>> smoke_03_intake_ponta_a_ponta.py
+[info] 200 em 2.35s | {"status": "recebido", "protocolo": "JF-20261029-HQQTUS", "area": "Trabalhista", "urgencia": "alta", "revisao_manual": false, "motivo_revisao": null}
+[PASS] smoke 3: intake classificado e protocolado dentro do SLA
+==============================================
+RESULTADO: os 3 smoke tests passaram.
+
+================================================================
+4. git checkout HEAD -- workflows/jurisflow-intake.json
+   arquivo volta para versionId v1.3.0
+================================================================
+
+5. python scripts/deploy_workflow.py   (republicando a versão atual)
+----------------------------------------------------------------
+[ok] 10 vínculo(s) de credencial preservados da instância
+[ok] workflow 'JurisFlow - Case Intake Router v1.0' atualizado (id NShRmkvwV6Zbrse8)
+[ok] workflow ativado, versão v1.3.0
+
+6. bash tests/smoke/run_all.sh   (comprovando a volta ao estado da v2.0.0)
+----------------------------------------------------------------
+Interpretador: python
+==============================================
+>> smoke_01_saude.py
+[info] https://n8n-production-81314.up.railway.app/healthz -> 200 em 0.51s | {"status":"ok"}
+[PASS] smoke 1: instância no ar e respondendo
+==============================================
+>> smoke_02_webhook_protegido.py
+[info] https://n8n-production-81314.up.railway.app/webhook/intake recusou com 403
+[PASS] smoke 2: webhook exige assinatura
+==============================================
+>> smoke_03_intake_ponta_a_ponta.py
+[info] 200 em 3.07s | {"status": "recebido", "protocolo": "JF-20261029-8E1TM8", "area": "Trabalhista", "urgencia": "alta", "revisao_manual": false, "motivo_revisao": null}
+[PASS] smoke 3: intake classificado e protocolado dentro do SLA
+==============================================
+RESULTADO: os 3 smoke tests passaram.
