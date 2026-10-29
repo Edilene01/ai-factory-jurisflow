@@ -5,6 +5,7 @@
 * **Decisora:** Edilene Chagas Faria
 * **Revê:** a escolha do caminho 1 registrada na seção 2.1 de [`politica-retencao-exclusao.md`](../lgpd/politica-retencao-exclusao.md)
 * **Depende de:** ADR-005
+* **Procedimento associado:** [`runbook-recuperacao.md`](../runbook-recuperacao.md)
 
 ## Contexto e definição do problema
 
@@ -16,7 +17,7 @@ execuções em SQLite, e não no Postgres que o JurisFlow criou. A purga SQL enc
 `relation "execution_entity" does not exist`, e as variáveis de *pruning* nativo não estavam
 definidas no Railway. É a pendência de conformidade mais séria em aberto.
 
-A segunda apareceu em 29/10, sem aviso.
+A segunda foi descoberta em 29/10, e já durava dias.
 
 ### O que se perdeu
 
@@ -28,14 +29,28 @@ nenhuma estivesse vencida: a de produção vale até 17/01/2027 e a de desenvolv
 20/11/2026. Chave válida recusada não é prazo, é assinatura — o segredo que as assinou deixou
 de existir.
 
-Some junto o que o n8n guardava: a conta, os workflows, as quatro credenciais e o histórico
-de execuções.
+Some junto o que o n8n guardava: a conta, as quatro credenciais e o histórico de execuções.
+**O que vive fora dele ficou íntegro**: os três workflows, porque estão versionados em
+`workflows/`, e a trilha, os *spans* e o registro de purga, porque o Postgres é outro serviço
+e não foi tocado. A tabela do que se perde e do que não se perde está no
+[`runbook-recuperacao.md`](../runbook-recuperacao.md).
 
-A causa provável é o armazenamento padrão em SQLite dentro do contêiner, sem volume
-persistente em `/home/node/.n8n`, ou com o volume desanexado em algum momento. Nessa
-configuração, qualquer recriação do contêiner leva tudo. **Isto não foi confirmado no painel
-do Railway**, e fica registrado como hipótese, não como fato apurado. O que é fato é o
-estado: a instância está vazia. A apuração da causa é assunto do post-mortem, não desta ADR.
+**Quando** isso aconteceu não é o dia em que foi visto. A última prova de instância cheia é
+de 20/10/2026, em
+[`evidencias/2026-10-20-smoke-e-classificacao.md`](../evidencias/2026-10-20-smoke-e-classificacao.md),
+com os três *smoke tests* passando. A descoberta é de 29/10. Entre as duas datas há **até
+nove dias** em que o formulário de intake não atendeu ninguém, sem que nada avisasse.
+
+A causa é o armazenamento padrão em SQLite dentro do contêiner, que depende de um volume
+remontado a cada *deploy*. O runbook registra o mecanismo em uma frase: **toda mudança de
+variável no Railway dispara um redeploy, e redeploy é o momento em que o volume pode não
+remontar.** O mesmo runbook traz a triagem que separa, pelos logs do *deploy*, banco ilegível
+de banco novo, e nesta ocorrência o padrão é o de banco novo.
+
+Não é episódio isolado. É a **segunda vez** que uma instância volta sem dados neste projeto:
+a primeira foi a do n8n Cloud, por fim de assinatura, registrada na ADR-004. Causas
+diferentes, mesmo efeito, e nas duas vezes a definição do sistema sobreviveu porque vive no
+Git. A apuração do intervalo de nove dias é assunto do post-mortem, não desta ADR.
 
 ### Por que isso muda a decisão de 20/10, e não apenas a adia
 
@@ -102,6 +117,7 @@ pendência por outra.
 * **A rede privada do Railway é IPv6 e não existe durante o *build*.** O primeiro *boot* depois da mudança pode falhar com erro de resolução de nome e só subir no *restart* seguinte. É comportamento esperado e não incidente, mas vai assustar quem não souber.
 * **O Postgres passa a rodar continuamente**, e não sob demanda como o serviço de desenvolvimento previsto na ADR-005. O custo é pequeno no plano Hobby e é previsível, mas é recorrente.
 * **A reconstrução manual continua sendo obrigatória.** Esta ADR não recupera o que se perdeu em 29/10: a conta de dono e as quatro credenciais precisam ser refeitas à mão de todo modo. A decisão evita a próxima perda, não desfaz esta.
+* **Aplicar esta decisão é, ela própria, uma janela de risco.** São sete variáveis novas no serviço do n8n, e cada alteração dispara um *redeploy*, que é o momento em que o volume pode não remontar. Hoje isso é inofensivo, porque não há mais o que perder; depois de recriadas as credenciais, deixa de ser.
 * Um papel a mais para rotacionar, com a sua linha própria na tabela de prazos.
 
 ### Mitigações adotadas
@@ -114,6 +130,11 @@ Definir `N8N_ENCRYPTION_KEY` como variável de ambiente, com valor novo e guarda
 árvore do projeto. Não reaproveitar a de desenvolvimento: ambientes que dividem segredo não
 são ambientes separados, e a ADR-005 já paga o preço de duas instâncias justamente para que
 sejam.
+
+Fazer **todas** as alterações de variável de uma vez, antes de recriar a conta de dono e as
+quatro credenciais, e só então conferir a instância. A ordem inverte o risco, porque põe o
+*redeploy* perigoso no momento em que não há nada a perder. O runbook trata isso como janela
+de manutenção, e não como operação de rotina.
 
 Manter o `retencao.yml` **fora da plataforma**, pelo motivo que a ADR-005 já havia dado e que
 esta decisão agrava: antes, as duas instâncias dividiam fornecedor; agora o n8n e o banco
@@ -156,13 +177,18 @@ A decisão se confirma quando:
 4. O `retencao.yml` concluir em verde, com `DATABASE_URL` apontando para o papel restrito.
 5. Os três *smoke tests* passarem contra a URL pública, de novo.
 
+O [`scripts/restaurar_instancia.py`](../../scripts/restaurar_instancia.py) cobre os itens 1 e
+5 em uma corrida: publica os três workflows, ativa, aponta qual credencial ficou faltando,
+roda os *smoke tests* e consulta o painel de métricas. Os itens 2, 3 e 4 são conferidos à
+mão, e o 2 é o único que exige esperar um *redeploy* para valer.
+
 Se a disponibilidade do n8n passar a ser refém do Postgres com frequência que atrapalhe a
 operação, ou se o banco único se mostrar um risco maior do que o avaliado aqui, esta ADR deve
 ser revista em favor da opção C, aceitando o custo do serviço adicional e resolvendo a lacuna
 das 72 horas por outro caminho.
 
-A causa raiz da perda de 29/10 e o motivo de ela ter levado nove dias para ser notada são
-assunto do post-mortem INC-002, e não desta ADR. O que cabe registrar aqui é que o alerta
+O motivo de a perda ter levado até nove dias para ser notada é assunto do post-mortem
+INC-002, e não desta ADR. O que cabe registrar aqui é que o alerta
 **A-02**, de volume abaixo de 20% da média da mesma hora, já estava catalogado como P1 em
 [`observabilidade/alertas.md`](../observabilidade/alertas.md) e teria pego isto no mesmo dia,
 se estivesse implementado.
