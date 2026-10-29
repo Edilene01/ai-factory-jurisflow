@@ -17,16 +17,29 @@ caro, e a análise de causa cabe no post-mortem.
 
 O mais rápido, e o que resolve a maioria dos casos, porque quase toda mudança está no JSON.
 
+O alvo é **a versão boa imediatamente anterior**, que se descobre no histórico do próprio
+arquivo:
+
 ```bash
-git checkout v1.0.0 -- workflows/jurisflow-intake.json
+git log --oneline --follow -- workflows/jurisflow-intake.json
+
+git checkout <sha-da-versão-anterior> -- workflows/jurisflow-intake.json
 
 N8N_PUBLIC_URL=https://... N8N_API_KEY=... python scripts/deploy_workflow.py
 
 N8N_PUBLIC_URL=https://... JURISFLOW_WEBHOOK_SECRET=... bash tests/smoke/run_all.sh
 ```
 
+> ⚠️ **Não reverta para a `v1.0.0`.** O workflow daquela tag usa o nó
+> `n8n-nodes-base.openAi` em `typeVersion 1`, que no n8n 2.40.5 resolve para a raiz da API e
+> devolve a mensagem de boas-vindas em vez da classificação. Foi o defeito corrigido em
+> `f61f667`. Reverter para lá durante um incidente troca um problema por outro, no pior
+> momento. O limite seguro para trás é `f61f667`.
+
 Tempo esperado: menos de dois minutos. O `deploy_workflow.py` atualiza o workflow existente e
-o reativa, de modo que não há duplicação na instância.
+o reativa, de modo que não há duplicação na instância. Ele também relê os ids das credenciais
+da versão publicada e os recoloca antes do `PUT`, o que é o que impede a reversão de
+desvincular os dez nós e deixar o workflow sem ativar.
 
 ## Nível 2 – Reverter o commit e deixar o pipeline republicar
 
@@ -52,14 +65,18 @@ daquele momento.
 
 ## Evidência de execução
 
-O procedimento foi executado em ambiente de produção, e a evidência está em
-[`docs/evidencias/`](evidencias/), com captura de tela e log da saída.
+O procedimento foi executado em produção em **29/10/2026**, nos dois sentidos: reversão para
+a versão anterior, comprovação, e volta à versão atual. A rubrica aceita *print ou log*, e o
+que esta execução produziu é log.
 
 | Item | Arquivo |
 |---|---|
-| Captura do deploy anterior restaurado | `docs/evidencias/rollback-01-deploy-anterior.png` |
-| Log do `deploy_workflow.py` na reversão | `docs/evidencias/rollback-02-deploy-workflow.txt` |
-| Smoke tests passando após a reversão | `docs/evidencias/rollback-03-smoke-tests.png` |
+| Relato da execução, com os seis passos e o que se aprendeu | [`evidencias/2026-10-29-rollback.md`](evidencias/2026-10-29-rollback.md) |
+| Saída bruta dos quatro comandos, íntegra | [`evidencias/rollback-02-deploy-workflow.txt`](evidencias/rollback-02-deploy-workflow.txt) |
+
+Resumo: reverteu para `v1.2.2`, os três *smoke tests* passaram com o protocolo
+`JF-20261029-HQQTUS`, voltou para `v1.3.0`, e os três passaram de novo com
+`JF-20261029-8E1TM8`. Nos dois sentidos, os dez vínculos de credencial foram preservados.
 
 ## Checklist do pós-reversão
 
