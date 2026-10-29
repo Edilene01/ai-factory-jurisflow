@@ -33,8 +33,8 @@ N8N_PUBLIC_URL=https://... JURISFLOW_WEBHOOK_SECRET=... bash tests/smoke/run_all
 > ⚠️ **Não reverta para a `v1.0.0`.** O workflow daquela tag usa o nó
 > `n8n-nodes-base.openAi` em `typeVersion 1`, que no n8n 2.40.5 resolve para a raiz da API e
 > devolve a mensagem de boas-vindas em vez da classificação. Foi o defeito corrigido em
-> `f61f667`. Reverter para lá durante um incidente troca um problema por outro, no pior
-> momento. O limite seguro para trás é `f61f667`.
+> `afb85ff`. Reverter para lá durante um incidente troca um problema por outro, no pior
+> momento. O limite seguro para trás é `afb85ff`.
 
 Tempo esperado: menos de dois minutos. O `deploy_workflow.py` atualiza o workflow existente e
 o reativa, de modo que não há duplicação na instância. Ele também relê os ids das credenciais

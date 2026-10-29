@@ -22,14 +22,57 @@ Uso:
 """
 import json
 import os
+import shutil
 import subprocess
 import sys
 import time
 import urllib.error
 import urllib.request
 
+# O console do Windows abre em cp1252, e este script reimprime a saida dos
+# processos filhos, que tem acento. Sem isto, ele morre com UnicodeEncodeError
+# no meio de uma restauracao, que e o pior momento possivel.
+for fluxo in (sys.stdout, sys.stderr):
+    if hasattr(fluxo, "reconfigure"):
+        fluxo.reconfigure(encoding="utf-8", errors="replace")
+
 AQUI = os.path.dirname(os.path.abspath(__file__))
 RAIZ = os.path.normpath(os.path.join(AQUI, ".."))
+
+
+def achar_bash():
+    """Caminho do bash a usar.
+
+    No Windows, o `bash` que está no PATH costuma ser o lançador do WSL, em
+    System32. Sem distribuição instalada ele falha com
+    `execvpe(/bin/bash) failed`, e o que se quer aqui é o bash do Git for
+    Windows, que já veio junto com o git.
+    """
+    achado = shutil.which("bash")
+    candidatos = []
+    if achado and "system32" not in achado.lower():
+        candidatos.append(achado)
+    candidatos += [
+        r"C:\Program Files\Gitinash.exe",
+        r"C:\Program Files (x86)\Gitinash.exe",
+        "/bin/bash",
+    ]
+    for caminho in candidatos:
+        if caminho and os.path.exists(caminho):
+            return caminho
+    return achado or "bash"
+
+
+def ambiente_filho():
+    """Ambiente dos subprocessos, com a saida forcada em UTF-8.
+
+    Sem isto o filho escreve no cano com a codificacao do console, e o acento
+    chega aqui como caractere de substituicao.
+    """
+    ambiente = dict(os.environ)
+    ambiente["PYTHONIOENCODING"] = "utf-8"
+    ambiente["PYTHONUTF8"] = "1"
+    return ambiente
 
 BASE = os.environ.get("N8N_PUBLIC_URL", "").rstrip("/")
 API_KEY = os.environ.get("N8N_API_KEY", "")
@@ -106,6 +149,7 @@ def publicar():
         r = subprocess.run(
             [sys.executable, os.path.join(AQUI, "deploy_workflow.py"), caminho],
             cwd=RAIZ, capture_output=True, text=True, encoding="utf-8", errors="replace",
+            env=ambiente_filho(),
         )
         for linha in (r.stdout or "").strip().splitlines():
             print("    " + linha)
@@ -147,13 +191,30 @@ def conferir_credenciais():
 
 def smoke():
     titulo(4, "Smoke tests contra a URL pública")
-    r = subprocess.run(
-        ["bash", "tests/smoke/run_all.sh"],
-        cwd=RAIZ, capture_output=True, text=True, encoding="utf-8", errors="replace",
-    )
-    for linha in (r.stdout or "").strip().splitlines():
+    try:
+        r = subprocess.run(
+            [achar_bash(), "tests/smoke/run_all.sh"],
+            cwd=RAIZ, capture_output=True, text=True, encoding="utf-8",
+            errors="replace", env=ambiente_filho(),
+        )
+    except FileNotFoundError:
+        print("  [ERRO] não encontrei um `bash` utilizável.")
+        print("  No Windows, instale o Git for Windows ou rode pelo Git Bash.")
+        return False
+
+    linhas = (r.stdout or "").strip().splitlines()
+    for linha in linhas:
         if any(m in linha for m in ("PASS", "FALHA", "RESULTADO", "info")):
             print("  " + linha)
+
+    # Silêncio aqui já custou uma investigação: o relatório final dizia [--] e
+    # a seção vinha vazia, sem dizer o que havia acontecido.
+    if r.returncode != 0 or not linhas:
+        print(f"  [ERRO] os smoke tests terminaram em código {r.returncode}.")
+        for linha in (r.stderr or "").strip().splitlines()[-5:]:
+            print("    " + linha)
+        if not linhas:
+            print("    (o comando não produziu saída alguma)")
     return r.returncode == 0
 
 
