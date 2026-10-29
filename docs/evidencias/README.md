@@ -8,9 +8,8 @@ isso: *rollback* descrito sem evidência não conta.
 
 | Arquivo | Conteúdo | Status |
 |---|---|---|
-| `rollback-01-deploy-anterior.png` | Captura da plataforma mostrando o deploy anterior restaurado, com data e hora visíveis | `<pendente>` |
-| `rollback-02-deploy-workflow.txt` | Saída do `scripts/deploy_workflow.py` durante a reversão, com a versão publicada | `<pendente>` |
-| `rollback-03-smoke-tests.png` | Os três smoke tests passando depois da reversão | `<pendente>` |
+| [`2026-10-29-rollback.md`](2026-10-29-rollback.md) | O rollback executado em produção nos dois sentidos, com os seis passos, os protocolos e o que a execução mudou no procedimento | **Pronto** |
+| [`rollback-02-deploy-workflow.txt`](rollback-02-deploy-workflow.txt) | Saída bruta do `deploy_workflow.py` e dos *smoke tests* na ida e na volta, com as versões publicadas | **Pronto** |
 | `pipeline-verde.png` | Execução do GitHub Actions concluída, com o tempo total abaixo de cinco minutos | `<pendente>` |
 | `url-publica.png` | A URL pública respondendo, de preferência a partir de outro dispositivo | `<pendente>` |
 | [`2026-10-20-smoke-e-classificacao.md`](2026-10-20-smoke-e-classificacao.md) | Os três smoke tests passando e o roteamento nas cinco áreas, com protocolos e latências | **Pronto** |
