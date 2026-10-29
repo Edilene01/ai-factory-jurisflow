@@ -8,7 +8,10 @@ Instrução de instalação e comando de terminal não entram em ADR: isso é as
 |---|---|---|---|
 | [ADR-001](ADR-001-manter-n8n-como-orquestrador.md) | Manter o n8n como orquestrador e evoluir o protótipo | Aceita | 18/09/2026 |
 | [ADR-002](ADR-002-hospedagem-railway-ambientes-separados.md) | Hospedar em Railway, com dev e prod separados | Substituída pela ADR-003 | 18/09/2026 |
-| [ADR-003](ADR-003-producao-n8n-cloud-desenvolvimento-railway.md) | Produção no n8n Cloud e desenvolvimento no Railway | Aceita | 21/09/2026 |
+| [ADR-003](ADR-003-producao-n8n-cloud-desenvolvimento-railway.md) | Produção no n8n Cloud e desenvolvimento no Railway | Substituída pela ADR-004 | 21/09/2026 |
+| [ADR-004](ADR-004-reconstruir-producao-no-n8n-cloud.md) | Reconstruir produção no n8n Cloud, em instância nova | Substituída pela ADR-005 | 19/10/2026 |
+| [ADR-005](ADR-005-railway-nos-dois-ambientes.md) | Railway nos dois ambientes, com uma instância cada | Aceita | 19/10/2026 |
+| [ADR-006](ADR-006-postgres-como-banco-do-n8n.md) | Postgres como banco do n8n, com papel próprio para a purga | Aceita | 29/10/2026 |
 
 Uma ADR aceita não é imutável. Quando a realidade mudar, cria-se uma nova ADR que substitui
 a anterior, e a antiga passa a `status: substituída`, sem ser apagada, porque o histórico da

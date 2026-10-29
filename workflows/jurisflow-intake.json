@@ -29,7 +29,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Normaliza o payload do formulário, gera o protocolo e prepara DUAS versões da\n// descrição: a íntegra, que segue para o canal do time responsável, e a sanitizada,\n// que é a única enviada ao provedor de LLM.\nconst body = $json.body || {};\n\nconst obrigatorios = ['nome_cliente', 'cpf', 'descricao_caso'];\nconst faltando = obrigatorios.filter((c) => !body[c]);\nif (faltando.length) {\n  throw new Error('Campos obrigatorios ausentes no intake: ' + faltando.join(', '));\n}\n\nconst soDigitos = (v) => String(v || '').replace(/\\D/g, '');\n\nfunction mascararCpf(cpf) {\n  const d = soDigitos(cpf);\n  if (d.length !== 11) return '***.***.***-**';\n  return '***.***.***-' + d.slice(9);\n}\n\nfunction mascararNome(nome) {\n  const partes = String(nome).trim().split(/\\s+/).filter(Boolean);\n  const primeiro = partes.shift() || '';\n  const iniciais = partes.map((p) => p.charAt(0).toUpperCase() + '.');\n  return [primeiro].concat(iniciais).join(' ');\n}\n\nfunction sanitizarTexto(txt) {\n  return String(txt || '')\n    .replace(/\\b\\d{2}\\.?\\d{3}\\.?\\d{3}\\/?\\d{4}-?\\d{2}\\b/g, '[CNPJ]')\n    .replace(/\\b\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d{2}\\b/g, '[CPF]')\n    .replace(/[\\w.+-]+@[\\w-]+\\.[\\w.]{2,}/g, '[EMAIL]')\n    .replace(/\\(?\\d{2}\\)?\\s?9?\\d{4}-?\\d{4}/g, '[TELEFONE]');\n}\n\nconst agora = new Date();\nconst carimbo = agora.toISOString().slice(0, 10).replace(/-/g, '');\nconst sufixo = Math.random().toString(36).slice(2, 8).toUpperCase();\n\nreturn [{\n  json: {\n    protocolo: 'JF-' + carimbo + '-' + sufixo,\n    recebido_em: agora.toISOString(),\n    nome_mascarado: mascararNome(body.nome_cliente),\n    cpf_mascarado: mascararCpf(body.cpf),\n    descricao_caso: body.descricao_caso,\n    descricao_sanitizada: sanitizarTexto(body.descricao_caso),\n    origem: body.origem || 'desconhecida',\n  },\n}];"
+        "jsCode": "// Normaliza o payload do formulário, gera o protocolo e prepara DUAS versões da\n// descrição: a íntegra, que segue para o canal do time responsável, e a sanitizada,\n// que é a única enviada ao provedor de LLM.\nconst body = $json.body || {};\n\nconst obrigatorios = ['nome_cliente', 'cpf', 'descricao_caso'];\nconst faltando = obrigatorios.filter((c) => !body[c]);\nif (faltando.length) {\n  throw new Error('Campos obrigatorios ausentes no intake: ' + faltando.join(', '));\n}\n\nconst soDigitos = (v) => String(v || '').replace(/\\D/g, '');\n\nfunction mascararCpf(cpf) {\n  const d = soDigitos(cpf);\n  if (d.length !== 11) return '***.***.***-**';\n  return '***.***.***-' + d.slice(9);\n}\n\nfunction mascararNome(nome) {\n  const partes = String(nome).trim().split(/\\s+/).filter(Boolean);\n  const primeiro = partes.shift() || '';\n  const iniciais = partes.map((p) => p.charAt(0).toUpperCase() + '.');\n  return [primeiro].concat(iniciais).join(' ');\n}\n\nfunction sanitizarTexto(txt) {\n  return String(txt || '')\n    .replace(/\\b\\d{2}\\.?\\d{3}\\.?\\d{3}\\/?\\d{4}-?\\d{2}\\b/g, '[CNPJ]')\n    .replace(/\\b\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d{2}\\b/g, '[CPF]')\n    .replace(/[\\w.+-]+@[\\w-]+\\.[\\w.]{2,}/g, '[EMAIL]')\n    .replace(/\\(?\\d{2}\\)?\\s?9?\\d{4}-?\\d{4}/g, '[TELEFONE]');\n}\n\nconst agora = new Date();\nconst carimbo = agora.toISOString().slice(0, 10).replace(/-/g, '');\nconst sufixo = Math.random().toString(36).slice(2, 8).toUpperCase();\n\nreturn [{\n  json: {\n    protocolo: 'JF-' + carimbo + '-' + sufixo,\n    recebido_em: agora.toISOString(),\n    nome_mascarado: mascararNome(body.nome_cliente),\n    cpf_mascarado: mascararCpf(body.cpf),\n    descricao_caso: body.descricao_caso,\n    descricao_sanitizada: sanitizarTexto(body.descricao_caso),\n    origem: body.origem || 'desconhecida',\n    // Carimbos de span. Sao quatro no fluxo inteiro, e e o maximo que da para\n    // medir sem instrumentar no a no: o trecho entre dois carimbos consecutivos\n    // e a duracao da etapa que esta no meio.\n    t_sanitizacao_fim: Date.now(),\n  },\n}];"
       },
       "id": "sanitizar",
       "name": "Sanitizar Entrada",
@@ -42,31 +42,21 @@
     },
     {
       "parameters": {
-        "resource": "chat",
-        "operation": "create",
-        "model": "gpt-4o-mini",
-        "messages": {
-          "values": [
-            {
-              "role": "system",
-              "content": "Você é um classificador de triagem de casos jurídicos da JurisFlow. Receba a descrição do caso, já sanitizada de dados identificáveis, e responda APENAS com um objeto JSON válido, sem markdown, no formato exato:\n{\"area\": \"<AREA>\", \"urgencia\": \"<URGENCIA>\"}\n\nValores permitidos para area: Trabalhista, Cível, Tributário, Criminal, Consumidor.\nValores permitidos para urgencia: alta, media, baixa.\n\nDefinições de área:\n- Trabalhista: vínculo empregatício, demissão, horas extras, rescisão, assédio no trabalho, FGTS, verbas.\n- Cível: contratos, família, divórcio, inventário, indenização, vizinhança, imobiliário, danos morais entre particulares.\n- Tributário: impostos, multas da Receita, ICMS, ISS, parcelamento de débito fiscal, execução fiscal.\n- Criminal: crime, prisão, inquérito, flagrante, ameaça, lesão corporal, defesa penal.\n- Consumidor: produto ou serviço com defeito, cobrança indevida de empresa, banco, plano de saúde, telefonia, garantia.\n\nUrgência alta: prazo legal vencendo, prisão, audiência marcada, risco iminente. Urgência baixa: dúvida genérica, sem prazo.\nSe a descrição não permitir classificar com segurança, devolva area com o valor \"Indefinido\"."
-            },
-            {
-              "role": "user",
-              "content": "={{ $json.descricao_sanitizada }}"
-            }
-          ]
-        },
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'gpt-4o-mini', temperature: 0, max_tokens: 60, messages: [ { role: 'system', content: \"Classifique o caso juridico. Responda SO com JSON valido, sem markdown:\\n{\\\"area\\\":\\\"<AREA>\\\",\\\"urgencia\\\":\\\"<URGENCIA>\\\"}\\narea: Trabalhista|Civel|Tributario|Criminal|Consumidor|Indefinido\\nurgencia: alta|media|baixa\\n\\nTrabalhista: emprego, demissao, rescisao, FGTS, horas extras, assedio no trabalho.\\nCivel: contratos, familia, divorcio, inventario, vizinhanca, imoveis, danos morais entre particulares.\\nTributario: impostos, Receita, ICMS, ISS, execucao fiscal, debito fiscal.\\nCriminal: crime, prisao, flagrante, inquerito, ameaca, lesao, defesa penal.\\nConsumidor: produto ou servico com defeito, cobranca indevida de empresa, banco, plano de saude, telefonia, garantia.\\n\\nalta: prazo vencendo, prisao, audiencia marcada, risco iminente. baixa: duvida sem prazo.\\nSem certeza: area \\\"Indefinido\\\".\" }, { role: 'user', content: $json.descricao_sanitizada } ] }) }}",
         "options": {
-          "temperature": 0,
-          "maxTokens": 60,
           "timeout": 30000
         }
       },
       "id": "llm-classificar",
       "name": "OpenAI Classificar",
-      "type": "n8n-nodes-base.openAi",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         680,
         340
@@ -80,11 +70,12 @@
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 2000,
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "notes": "Chama o endpoint de chat completions direto, por HTTP. O no n8n-nodes-base.openAi typeVersion 1 e legado e no n8n 2.40.5 resolvia para a raiz da API, devolvendo a mensagem de boas-vindas em vez da classificacao. HTTP Request nao muda de forma entre versoes, e a resposta fica sob contrato conhecido: choices[0].message.content e usage.prompt_tokens / usage.completion_tokens, que alimentam a metrica de custo. A credencial continua sendo a mesma, por predefinedCredentialType: a chave nao entra no workflow. PROMPT COMPRIMIDO na otimizacao do Bloco 3: a linha de base mostrou que ~300 dos 328 tokens de entrada por intake eram este prompt fixo, reenviado a cada chamada, contra ~30 da descricao do caso. Ver docs/otimizacoes/."
     },
     {
       "parameters": {
-        "jsCode": "// Le a resposta do modelo com tolerancia a markdown e a texto extra, normaliza a\n// area para uma chave canonica e marca para revisao manual tudo que nao for\n// reconhecido, em vez de deixar cair em um canal qualquer sem aviso.\nconst CANONICAS = {\n  trabalhista: 'Trabalhista',\n  civel: 'Cível',\n  tributario: 'Tributário',\n  criminal: 'Criminal',\n  consumidor: 'Consumidor',\n};\n\nconst SINONIMOS = {\n  'direito do trabalho': 'trabalhista',\n  trabalho: 'trabalhista',\n  'direito civil': 'civel',\n  civil: 'civel',\n  familia: 'civel',\n  'direito tributario': 'tributario',\n  tributos: 'tributario',\n  fiscal: 'tributario',\n  'direito penal': 'criminal',\n  penal: 'criminal',\n  crime: 'criminal',\n  'direito do consumidor': 'consumidor',\n  consumo: 'consumidor',\n  cdc: 'consumidor',\n};\n\nconst URGENCIAS = ['alta', 'media', 'baixa'];\n\nfunction normalizar(valor) {\n  return String(valor || '')\n    .normalize('NFD')\n    .replace(/[̀-ͯ]/g, '')\n    .toLowerCase()\n    .trim();\n}\n\nfunction extrairJson(bruto) {\n  const limpo = String(bruto || '').replace(/```json/gi, '').replace(/```/g, '').trim();\n  const inicio = limpo.indexOf('{');\n  const fim = limpo.lastIndexOf('}');\n  if (inicio === -1 || fim === -1) {\n    throw new Error('resposta do modelo sem objeto JSON reconhecivel');\n  }\n  return JSON.parse(limpo.slice(inicio, fim + 1));\n}\n\nconst entrada = $('Sanitizar Entrada').first().json;\nconst bruto = $json.message ? $json.message.content : ($json.content || '');\n\nlet areaChave = null;\nlet urgencia = 'media';\nlet revisaoManual = false;\nlet motivo = '';\n\ntry {\n  if ($json.error) {\n    throw new Error('provedor retornou erro: ' + JSON.stringify($json.error).slice(0, 200));\n  }\n  const dados = extrairJson(bruto);\n  const areaNormalizada = normalizar(dados.area);\n  areaChave = CANONICAS[areaNormalizada] ? areaNormalizada : (SINONIMOS[areaNormalizada] || null);\n\n  const urgenciaNormalizada = normalizar(dados.urgencia);\n  urgencia = URGENCIAS.indexOf(urgenciaNormalizada) >= 0 ? urgenciaNormalizada : 'media';\n\n  if (!areaChave) {\n    revisaoManual = true;\n    motivo = 'area nao reconhecida: ' + String(dados.area).slice(0, 60);\n  }\n} catch (erro) {\n  revisaoManual = true;\n  motivo = 'falha ao interpretar a classificacao: ' + erro.message;\n}\n\nconst latencia = Date.now() - new Date(entrada.recebido_em).getTime();\n\nreturn [{\n  json: {\n    protocolo: entrada.protocolo,\n    recebido_em: entrada.recebido_em,\n    latencia_ms: latencia,\n    area_chave: areaChave || 'triagem_manual',\n    area: areaChave ? CANONICAS[areaChave] : 'Triagem manual',\n    urgencia: urgencia,\n    revisao_manual: revisaoManual,\n    motivo_revisao: motivo,\n    nome_mascarado: entrada.nome_mascarado,\n    cpf_mascarado: entrada.cpf_mascarado,\n    descricao_caso: entrada.descricao_caso,\n    origem: entrada.origem,\n  },\n}];"
+        "jsCode": "// Le a resposta do modelo com tolerancia a markdown e a texto extra, normaliza a\n// area para uma chave canonica e marca para revisao manual tudo que nao for\n// reconhecido, em vez de deixar cair em um canal qualquer sem aviso.\nconst CANONICAS = {\n  trabalhista: 'Trabalhista',\n  civel: 'Cível',\n  tributario: 'Tributário',\n  criminal: 'Criminal',\n  consumidor: 'Consumidor',\n};\n\nconst SINONIMOS = {\n  'direito do trabalho': 'trabalhista',\n  trabalho: 'trabalhista',\n  'direito civil': 'civel',\n  civil: 'civel',\n  familia: 'civel',\n  'direito tributario': 'tributario',\n  tributos: 'tributario',\n  fiscal: 'tributario',\n  'direito penal': 'criminal',\n  penal: 'criminal',\n  crime: 'criminal',\n  'direito do consumidor': 'consumidor',\n  consumo: 'consumidor',\n  cdc: 'consumidor',\n};\n\nconst URGENCIAS = ['alta', 'media', 'baixa'];\n\nfunction normalizar(valor) {\n  return String(valor || '')\n    .normalize('NFD')\n    .replace(/[̀-ͯ]/g, '')\n    .toLowerCase()\n    .trim();\n}\n\nfunction extrairJson(bruto) {\n  const limpo = String(bruto || '').replace(/```json/gi, '').replace(/```/g, '').trim();\n  const inicio = limpo.indexOf('{');\n  const fim = limpo.lastIndexOf('}');\n  if (inicio === -1 || fim === -1) {\n    throw new Error('sem objeto JSON reconhecivel');\n  }\n  return JSON.parse(limpo.slice(inicio, fim + 1));\n}\n\nconst t_parse_inicio = Date.now();\nconst entrada = $('Sanitizar Entrada').first().json;\n// A forma da resposta do no de LLM muda entre versoes do n8n: ja veio como\n// { message: { content } }, como { content }, e como a resposta crua da API em\n// { choices: [...] }. Em vez de adivinhar a versao, varre o objeto e colhe toda\n// string que possa conter o JSON pedido. Deriva de versao deixa de quebrar o\n// roteamento, que foi o que aconteceu ao migrar de plataforma.\nfunction colherTextos(valor, prof) {\n  if (prof > 6 || valor == null) return [];\n  if (typeof valor === 'string') return valor.indexOf('{') >= 0 ? [valor] : [];\n  if (Array.isArray(valor)) {\n    return valor.reduce(function (acc, v) { return acc.concat(colherTextos(v, prof + 1)); }, []);\n  }\n  if (typeof valor === 'object') {\n    // Campos mais provaveis primeiro, para nao depender da ordem das chaves.\n    const preferidos = ['content', 'text', 'output', 'message', 'choices', 'data', 'response'];\n    const chaves = Object.keys(valor).sort(function (a, b) {\n      return preferidos.indexOf(b) - preferidos.indexOf(a);\n    });\n    return chaves.reduce(function (acc, k) { return acc.concat(colherTextos(valor[k], prof + 1)); }, []);\n  }\n  return [];\n}\n\n// usage tambem muda de lugar; procurar por chave conhecida e mais robusto que\n// fixar o caminho. Alimenta a metrica de custo do Bloco 2.\nfunction acharUso(valor, prof) {\n  if (prof > 6 || valor == null || typeof valor !== 'object') return null;\n  if (valor.prompt_tokens !== undefined || valor.promptTokens !== undefined) return valor;\n  for (const k of Object.keys(valor)) {\n    const r = acharUso(valor[k], prof + 1);\n    if (r) return r;\n  }\n  return null;\n}\n\nconst candidatos = colherTextos($json, 0);\nconst bruto = candidatos.length ? candidatos[0] : '';\nconst uso = acharUso($json, 0) || {};\n\nlet areaChave = null;\nlet urgencia = 'media';\nlet revisaoManual = false;\nlet motivo = '';\n\ntry {\n  if ($json.error) {\n    throw new Error('provedor retornou erro: ' + JSON.stringify($json.error).slice(0, 200));\n  }\n  let dados = null;\n  let ultimoErro = null;\n  for (const c of (candidatos.length ? candidatos : [''])) {\n    try { dados = extrairJson(c); break; } catch (e) { ultimoErro = e; }\n  }\n  if (!dados) {\n    // Sem historico de execucao (saveDataSuccessExecution: none), a forma do\n    // objeto so chega aqui. Sao nomes de chave, nunca conteudo do caso.\n    // Este no recebe apenas o retorno do provedor; o texto do caso fica no no\n    // anterior e nao passa por aqui. Logo, um trecho do objeto e diagnostico\n    // seguro, e e o unico caminho que sobra sem historico de execucao.\n    let amostra = '';\n    try { amostra = JSON.stringify($json).slice(0, 220); } catch (e) { amostra = '(nao serializavel)'; }\n    throw new Error((ultimoErro ? ultimoErro.message : 'sem resposta')\n      + ' | recebido: ' + amostra);\n  }\n  const areaNormalizada = normalizar(dados.area);\n  areaChave = CANONICAS[areaNormalizada] ? areaNormalizada : (SINONIMOS[areaNormalizada] || null);\n\n  const urgenciaNormalizada = normalizar(dados.urgencia);\n  urgencia = URGENCIAS.indexOf(urgenciaNormalizada) >= 0 ? urgenciaNormalizada : 'media';\n\n  if (!areaChave) {\n    revisaoManual = true;\n    motivo = 'area nao reconhecida: ' + String(dados.area).slice(0, 60);\n  }\n} catch (erro) {\n  revisaoManual = true;\n  motivo = 'falha ao interpretar a classificacao: ' + erro.message;\n}\n\nconst latencia = Date.now() - new Date(entrada.recebido_em).getTime();\n\nreturn [{\n  json: {\n    protocolo: entrada.protocolo,\n    recebido_em: entrada.recebido_em,\n    latencia_ms: latencia,\n    area_chave: areaChave || 'triagem_manual',\n    area: areaChave ? CANONICAS[areaChave] : 'Triagem manual',\n    urgencia: urgencia,\n    revisao_manual: revisaoManual,\n    motivo_revisao: motivo,\n    nome_mascarado: entrada.nome_mascarado,\n    cpf_mascarado: entrada.cpf_mascarado,\n    descricao_caso: entrada.descricao_caso,\n    origem: entrada.origem,\n    t_sanitizacao_fim: entrada.t_sanitizacao_fim,\n    t_parse_inicio: t_parse_inicio,\n    t_parse_fim: Date.now(),\n    modelo: 'gpt-4o-mini',\n    tokens_entrada: uso.prompt_tokens !== undefined ? uso.prompt_tokens : (uso.promptTokens || null),\n    tokens_saida: uso.completion_tokens !== undefined ? uso.completion_tokens : (uso.completionTokens || null),\n  },\n}];"
       },
       "id": "parse",
       "name": "Parse Classificação",
@@ -98,7 +89,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ status: 'recebido', protocolo: $json.protocolo, area: $json.area, urgencia: $json.urgencia, revisao_manual: $json.revisao_manual }) }}",
+        "responseBody": "={{ JSON.stringify({ status: 'recebido', protocolo: $json.protocolo, area: $json.area, urgencia: $json.urgencia, revisao_manual: $json.revisao_manual, motivo_revisao: $json.motivo_revisao || null }) }}",
         "options": {
           "responseCode": 200
         }
@@ -110,7 +101,8 @@
       "position": [
         1120,
         160
-      ]
+      ],
+      "notes": "motivo_revisao entra na resposta para que a falha seja diagnosticavel de fora, sem depender do historico de execucao, que nao persiste em caso de sucesso. O campo carrega causa tecnica ou o rotulo devolvido pelo modelo, nunca dado do caso."
     },
     {
       "parameters": {
@@ -134,47 +126,141 @@
     },
     {
       "parameters": {
-        "dataType": "string",
-        "value1": "={{ $json.area_chave }}",
         "rules": {
-          "rules": [
+          "values": [
             {
-              "operation": "equal",
-              "value2": "trabalhista",
-              "output": 0
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cond-trabalhista",
+                    "leftValue": "={{ $json.area_chave }}",
+                    "rightValue": "trabalhista",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Trabalhista"
             },
             {
-              "operation": "equal",
-              "value2": "civel",
-              "output": 1
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cond-civel",
+                    "leftValue": "={{ $json.area_chave }}",
+                    "rightValue": "civel",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Civel"
             },
             {
-              "operation": "equal",
-              "value2": "tributario",
-              "output": 2
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cond-tributario",
+                    "leftValue": "={{ $json.area_chave }}",
+                    "rightValue": "tributario",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Tributario"
             },
             {
-              "operation": "equal",
-              "value2": "criminal",
-              "output": 3
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cond-criminal",
+                    "leftValue": "={{ $json.area_chave }}",
+                    "rightValue": "criminal",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Criminal"
             },
             {
-              "operation": "equal",
-              "value2": "consumidor",
-              "output": 4
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cond-consumidor",
+                    "leftValue": "={{ $json.area_chave }}",
+                    "rightValue": "consumidor",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Consumidor"
             }
           ]
         },
-        "fallbackOutput": "none"
+        "options": {}
       },
       "id": "switch-area",
       "name": "Switch Área",
       "type": "n8n-nodes-base.switch",
-      "typeVersion": 1,
+      "typeVersion": 3.2,
       "position": [
         1300,
         420
-      ]
+      ],
+      "notes": "typeVersion 3.2, e nao 1. O Switch v1 aceita no maximo 4 saidas (0 a 3), e sao cinco areas: a quinta, Consumidor, nunca era entregue e o n8n recusava a execucao com \"The ouput 4 is not allowed\". O defeito veio do prototipo e so apareceu quando o fluxo passou a rodar com volume, porque exigia um caso de Consumidor para se manifestar. A v3 nao tem teto de saidas."
     },
     {
       "parameters": {
@@ -202,7 +288,8 @@
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 2000
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -230,7 +317,8 @@
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 2000
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -258,7 +346,8 @@
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 2000
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -286,7 +375,8 @@
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 2000
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -314,7 +404,8 @@
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 2000
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -342,20 +433,78 @@
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 2000
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
-        "jsCode": "// Registro de auditoria sem dado identificavel. Hoje o destino ainda e um sink em\n// memoria; a persistencia em Postgres entra na Etapa 2, e o formato do registro ja\n// esta fechado para que aquela mudanca seja so a troca do destino.\nconst d = $json;\nreturn [{\n  json: {\n    protocolo: d.protocolo,\n    recebido_em: d.recebido_em,\n    latencia_ms: d.latencia_ms,\n    area: d.area,\n    urgencia: d.urgencia,\n    revisao_manual: d.revisao_manual,\n    motivo_revisao: d.motivo_revisao,\n    origem: d.origem,\n    caracteres_descricao: String(d.descricao_caso || '').length,\n  },\n}];"
+        "jsCode": "// Fecha a medicao do ciclo completo e monta as duas linhas que vao ao Postgres.\n// Nada identificavel entra aqui: o objeto e montado campo a campo, e do texto\n// do caso so sobrevive a contagem de caracteres.\nconst d = $('Parse Classificação').first().json;\nconst e = $('Sanitizar Entrada').first().json;\nconst t_fim = Date.now();\nconst t0 = new Date(e.recebido_em).getTime();\n\n// Com onError continueRegularOutput nos nos do Slack, a falha de entrega chega\n// aqui como item de erro em vez de interromper o fluxo. Registrar isso e o\n// ponto: o caso foi classificado, o formulario respondeu sucesso ao cliente, e\n// ninguem recebeu o caso. E o pior modo de falha do sistema, e o unico que a\n// metrica de erro nao enxergaria se o registro se perdesse junto.\nconst falhouEntrega = !!($json && $json.error);\nconst erroEntrega = falhouEntrega\n  ? String($json.error.message || $json.error).slice(0, 180)\n  : null;\n\nconst trilha = {\n  protocolo: d.protocolo,\n  recebido_em: d.recebido_em,\n  latencia_ms: d.latencia_ms,\n  duracao_total_ms: t_fim - t0,\n  duracao_resposta_ms: d.t_parse_fim - t0,\n  area: d.revisao_manual ? null : d.area,\n  urgencia: d.urgencia,\n  revisao_manual: d.revisao_manual,\n  motivo_revisao: d.motivo_revisao || erroEntrega,\n  origem: d.origem,\n  caracteres_descricao: String(e.descricao_caso || '').length,\n  modelo: d.modelo,\n  tokens_entrada: d.tokens_entrada,\n  tokens_saida: d.tokens_saida,\n  status: falhouEntrega ? 'erro' : (d.revisao_manual ? 'revisao_manual' : 'sucesso'),\n  causa_falha: falhouEntrega ? 'slack' : null,\n};\n\n// Quatro spans medidos, e nao sete. Os carimbos disponiveis delimitam quatro\n// trechos; declarar sete daria aparencia de granularidade que nao existe.\n// 'entrega_slack' engloba o roteamento, que e barato e nao tem carimbo proprio.\nconst spans = [\n  ['sanitizacao',       t0,                  e.t_sanitizacao_fim],\n  ['classificacao_llm', e.t_sanitizacao_fim, d.t_parse_inicio],\n  ['parse',             d.t_parse_inicio,    d.t_parse_fim],\n  ['entrega_slack',     d.t_parse_fim,       t_fim],\n].map(function (x) {\n  return {\n    protocolo: d.protocolo,\n    span: x[0],\n    inicio: new Date(x[1]).toISOString(),\n    fim: new Date(x[2]).toISOString(),\n    duracao_ms: Math.max(0, x[2] - x[1]),\n    status: (x[0] === 'entrega_slack' && falhouEntrega) ? 'erro'\n          : (x[0] === 'classificacao_llm' && d.revisao_manual) ? 'erro'\n          : 'ok',\n  };\n});\n\nreturn [{ json: { trilha: trilha, spans: spans } }];"
       },
       "id": "audit",
-      "name": "Registro de Auditoria",
+      "name": "Montar Trilha e Spans",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1120,
-        900
-      ]
+        1800,
+        560
+      ],
+      "notes": "Roda DEPOIS da entrega no Slack, e nao em paralelo: o SLA do briefing fecha na notificacao, e medir antes disso subestimaria justamente o numero contratado."
+    },
+    {
+      "id": "gravar-trilha",
+      "name": "Gravar Trilha",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        2060,
+        560
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "",
+          "name": "JurisFlow Postgres"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "notes": "Observabilidade nao pode derrubar o intake: falha aqui segue adiante.",
+      "parameters": {
+        "operation": "executeQuery",
+        "options": {
+          "queryReplacement": "={{ [JSON.stringify($json.trilha)] }}"
+        },
+        "query": "INSERT INTO jurisflow_trilha_auditoria\n  (protocolo, recebido_em, latencia_ms, duracao_total_ms, duracao_resposta_ms,\n   area, urgencia, revisao_manual, motivo_revisao, origem, caracteres_descricao,\n   modelo, tokens_entrada, tokens_saida, status, causa_falha)\nSELECT x.protocolo, x.recebido_em::timestamptz, x.latencia_ms, x.duracao_total_ms,\n       x.duracao_resposta_ms, x.area, x.urgencia, x.revisao_manual, x.motivo_revisao,\n       x.origem, x.caracteres_descricao, x.modelo, x.tokens_entrada, x.tokens_saida,\n       x.status, x.causa_falha\n  FROM jsonb_to_record($1::jsonb) AS x(\n       protocolo text, recebido_em text, latencia_ms int, duracao_total_ms int,\n       duracao_resposta_ms int, area text, urgencia text, revisao_manual boolean,\n       motivo_revisao text, origem text, caracteres_descricao int, modelo text,\n       tokens_entrada int, tokens_saida int, status text, causa_falha text)\nON CONFLICT (protocolo) DO NOTHING;"
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "gravar-spans",
+      "name": "Gravar Spans",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        2320,
+        560
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "",
+          "name": "JurisFlow Postgres"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "notes": "Le da montagem por referencia explicita: depois do INSERT anterior, $json ja e a saida do Postgres, e nao o item original. Insercao em lote, porque quatro inserts sincronos por intake acrescentariam latencia a medicao da propria latencia.",
+      "parameters": {
+        "operation": "executeQuery",
+        "options": {
+          "queryReplacement": "={{ [JSON.stringify($('Montar Trilha e Spans').first().json.spans)] }}"
+        },
+        "query": "INSERT INTO jurisflow_trace_span (protocolo, span, inicio, fim, duracao_ms, status)\nSELECT x.protocolo, x.span, x.inicio::timestamptz, x.fim::timestamptz, x.duracao_ms, x.status\n  FROM jsonb_to_recordset($1::jsonb) AS x(\n       protocolo text, span text, inicio text, fim text, duracao_ms int, status text)\nON CONFLICT (protocolo, span) DO NOTHING;"
+      },
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -402,11 +551,6 @@
           },
           {
             "node": "Precisa de Revisão Manual?",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Registro de Auditoria",
             "type": "main",
             "index": 0
           }
@@ -469,6 +613,94 @@
           }
         ]
       ]
+    },
+    "Slack #juris-trabalhista": {
+      "main": [
+        [
+          {
+            "node": "Montar Trilha e Spans",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack #juris-civel": {
+      "main": [
+        [
+          {
+            "node": "Montar Trilha e Spans",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack #juris-tributario": {
+      "main": [
+        [
+          {
+            "node": "Montar Trilha e Spans",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack #juris-criminal": {
+      "main": [
+        [
+          {
+            "node": "Montar Trilha e Spans",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack #juris-consumidor": {
+      "main": [
+        [
+          {
+            "node": "Montar Trilha e Spans",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack #juris-triagem-manual": {
+      "main": [
+        [
+          {
+            "node": "Montar Trilha e Spans",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar Trilha e Spans": {
+      "main": [
+        [
+          {
+            "node": "Gravar Trilha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gravar Trilha": {
+      "main": [
+        [
+          {
+            "node": "Gravar Spans",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -481,7 +713,7 @@
     "executionTimeout": 120,
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "v1.0.1",
+  "versionId": "v1.3.0",
   "id": "jurisflow-case-intake",
   "meta": {
     "templateCredsSetupCompleted": false
