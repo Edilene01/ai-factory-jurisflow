@@ -313,7 +313,9 @@ SELECT c.dia,
        (c.usd_dia * 30 > 30)                                          AS dispara_a09
   FROM vw_custo_dia c
   LEFT JOIN LATERAL (
-      SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY a.usd_dia) AS mediana_7d
+      -- O cast para numeric e obrigatorio: percentile_cont devolve double
+      -- precision, e round(double precision, int) nao existe no PostgreSQL.
+      SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY a.usd_dia)::numeric AS mediana_7d
         FROM vw_custo_dia a
        WHERE a.dia <  c.dia
          AND a.dia >= c.dia - 7
