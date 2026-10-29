@@ -63,6 +63,12 @@ jobs:
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
         run: python scripts/deploy_workflow.py
 
+      - name: Publicar agendador de retenção
+        env:
+          N8N_PUBLIC_URL: ${{ vars.N8N_PUBLIC_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: python scripts/deploy_workflow.py workflows/jurisflow-retencao.json
+
       - name: Smoke tests
         env:
           N8N_PUBLIC_URL: ${{ vars.N8N_PUBLIC_URL }}
@@ -89,6 +95,12 @@ jobs:
           N8N_PUBLIC_URL: ${{ vars.N8N_PUBLIC_URL }}
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
         run: python scripts/deploy_workflow.py
+
+      - name: Publicar agendador de retenção
+        env:
+          N8N_PUBLIC_URL: ${{ vars.N8N_PUBLIC_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: python scripts/deploy_workflow.py workflows/jurisflow-retencao.json
 
       - name: Smoke tests contra a URL pública
         env:
