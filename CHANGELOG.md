@@ -7,6 +7,7 @@ Todas as mudanças relevantes deste projeto são registradas aqui. O formato seg
 ## [Não publicado]
 
 ### Adicionado
+- `docs/roteiro-video-etapa-2.md`: roteiro do vídeo da etapa, com os quatro itens que o enunciado exige, os tempos, as telas na ordem e os números a citar em cada trecho. O `roteiro-video.md` que já existia é da Etapa 1 e cobre a URL pública e o *pipeline*, que era o que aquele enunciado pedia; não cobre alerta, sanitização nem otimização
 - `docs/evidencias/2026-10-29-rollback.md` e `docs/evidencias/rollback-02-deploy-workflow.txt`: o *rollback* executado em produção nos dois sentidos, com os seis passos, os dois protocolos e a saída bruta dos quatro comandos. Reverteu para `v1.2.2`, os três *smoke tests* passaram, voltou para `v1.3.0`, e passaram de novo
 
 ### Alterado — paridade entre os ambientes
