@@ -70,7 +70,7 @@ rotina de 90 dias não sobrevive ao terceiro mês.
 ### Observação sobre as datas
 
 As datas acima correspondem à adoção do projeto, registrada no commit
-`fb1ffa3 feat: adota o prototipo JurisFlow e publica a versao 1.0.0`, de 21/09/2026, e são
+`f7f6cd8 feat: adota o prototipo JurisFlow e publica a versao 1.0.0`, de 21/09/2026, e são
 coerentes com os horários de geração dos arquivos de credencial mantidos fora do repositório.
 Confirme cada uma no painel do provedor correspondente antes de usar este quadro como prova
 em avaliação externa: o histórico de rotação só tem valor se cada linha puder ser verificada
