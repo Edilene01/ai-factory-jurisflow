@@ -6,6 +6,20 @@ tudo é essa: nesta etapa, número sem evidência não conta.
 
 > Estado da Etapa 1: [`estado-da-entrega.md`](estado-da-entrega.md).
 
+## ⚠️ Incidente aberto — instância com banco vazio
+
+Desde 20/10/2026 a instância do Railway responde `/healthz` em 200 mas subiu com **banco
+vazio**: `showSetupOnFirstLoad: True`, os dois webhooks em 404 e a API em 401. Sumiram a conta
+de dono, as quatro credenciais, a chave de API e o histórico. **Os dados no Postgres estão
+intactos**, por serem de outro serviço.
+
+Causa provável: o redeploy disparado por uma mudança de variável não remontou o volume, ou
+`RAILWAY_RUN_UID` quebrou a permissão de leitura. Não há `DB_TYPE` no serviço, de modo que não
+foi troca de banco.
+
+**Recuperação:** [`runbook-recuperacao.md`](runbook-recuperacao.md), com tentativa de rollback
+antes da reconstrução, e `scripts/restaurar_instancia.py` para a parte automatizável.
+
 ## Bloco 0 — Destravar o ambiente (pré-requisito de tudo)
 
 Sem URL viva não há métrica, alerta nem medição de otimização.
