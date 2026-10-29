@@ -37,7 +37,7 @@ distingue as duas coisas com clareza.
 
 | Exigência | Onde | Status |
 |---|---|---|
-| Vídeo de 3 a 5 minutos, com a sua voz | Roteiro em `docs/roteiro-video.md` | Depende de você |
+| Vídeo de 3 a 5 minutos, com a sua voz | — | Depende de você |
 | URL pública abrindo no vídeo | | Depende de você |
 | Pipeline disparando um deploy no vídeo | | Depende de você |
 | Observações sobre acertos, erros e aprendizados | | Depende de você |
