@@ -4,21 +4,27 @@ Entrega na semana 10. A etapa separa o protótipo do produto: segurança de cred
 conformidade com a LGPD, observabilidade e uma otimização **medida**. A palavra que organiza
 tudo é essa: nesta etapa, número sem evidência não conta.
 
+**Atualizado em:** 29/10/2026, depois de o sistema voltar ao ar e a v2.0.0 ser publicada.
+
 > Estado da Etapa 1: [`estado-da-entrega.md`](estado-da-entrega.md).
 
-## ⚠️ Incidente aberto — instância com banco vazio
+## Incidente encerrado — a instância que voltou vazia
 
-Desde 20/10/2026 a instância do Railway responde `/healthz` em 200 mas subiu com **banco
-vazio**: `showSetupOnFirstLoad: True`, os dois webhooks em 404 e a API em 401. Sumiram a conta
-de dono, as quatro credenciais, a chave de API e o histórico. **Os dados no Postgres estão
-intactos**, por serem de outro serviço.
+Entre 20/10 e 29/10 a instância do Railway respondeu `/healthz` em 200 com **banco vazio**:
+`showSetupOnFirstLoad: True`, webhooks em 404 e API em 401. Sumiram a conta de dono, as quatro
+credenciais, a chave de API e o histórico. Os dados no Postgres ficaram intactos, por serem de
+outro serviço, e os workflows também, porque vivem no Git.
 
-Causa provável: o redeploy disparado por uma mudança de variável não remontou o volume, ou
-`RAILWAY_RUN_UID` quebrou a permissão de leitura. Não há `DB_TYPE` no serviço, de modo que não
-foi troca de banco.
+**Encerrado em 29/10.** A [ADR-006](adr/ADR-006-postgres-como-banco-do-n8n.md) move o n8n para
+o Postgres do projeto, com `N8N_ENCRYPTION_KEY` fixada no ambiente, de modo que o estado deixa
+de depender de um volume remontado a cada *deploy*. O procedimento está no
+[`runbook-recuperacao.md`](runbook-recuperacao.md) e a parte automatizável no
+`scripts/restaurar_instancia.py`.
 
-**Recuperação:** [`runbook-recuperacao.md`](runbook-recuperacao.md), com tentativa de rollback
-antes da reconstrução, e `scripts/restaurar_instancia.py` para a parte automatizável.
+Duas coisas ficam em aberto para o post-mortem, e não para este checklist: a causa raiz não
+pôde ser confirmada, porque o plano Hobby guarda sete dias de log e a descoberta veio no nono;
+e a demora de até nove dias para alguém perceber, que o alerta **A-02** — volume abaixo de 20%
+da média da mesma hora — teria pego no mesmo dia, se estivesse implementado.
 
 ## Bloco 0 — Destravar o ambiente (pré-requisito de tudo)
 
@@ -26,23 +32,22 @@ Sem URL viva não há métrica, alerta nem medição de otimização.
 
 | Item | Situação |
 |---|---|
-| Decidir a plataforma e registrar em ADR | **Feito.** [ADR-005](adr/ADR-005-railway-nos-dois-ambientes.md): Railway nos dois ambientes. A ADR-004 foi substituída no mesmo dia, ao se descobrir que o período de teste do n8n Cloud não libera a API pública |
-| Instância de produção | **Promovida**: a instância Railway que servia de desenvolvimento passa a ser produção, por ser a comprovada |
-| Workflow de intake | **Ativo.** Publicado e ativado pelo `deploy_workflow.py` em 19/10/2026 |
-| URL pública | **Responde.** `/healthz` em 200 e `/webhook/intake` recusa chamada anônima com 403 |
-| Smoke tests 1, 2 e 3 | ✅ **Os três passaram** em 20/10/2026, pela primeira vez no projeto. Evidência em [`evidencias/2026-10-20-smoke-e-classificacao.md`](evidencias/2026-10-20-smoke-e-classificacao.md) |
-| Roteamento nas cinco áreas | ✅ **5/5 corretas**, mais o caso ambíguo na tendência prevista. Latências de 1,5 a 3,2 s, todas dentro do SLA de 60 s |
-| Credencial da OpenAI | ✅ **Corrigida** em 20/10/2026. Antes continha valor que nem começava com `sk-` |
-| Nó de LLM legado | ✅ **Substituído** por HTTP Request. O `n8n-nodes-base.openAi` typeVersion 1 resolvia para a raiz da API no n8n 2.40.5 e devolvia a mensagem de boas-vindas |
-| Bug do deploy que apagava credenciais | **Corrigido.** O `deploy_workflow.py` relê os ids da versão publicada e os recoloca antes do PUT |
-| **Criar a segunda instância Railway, para desenvolvimento** | **Pendente, e é o próximo passo.** Mesma imagem `n8nio/n8n:2.40.5`, que é a que produção roda hoje, e as três credenciais com os nomes exatos: `JurisFlow Webhook Signature`, `OpenAI JurisFlow` e `Slack JurisFlow Bot` |
-| Separação de ambientes | ⚠️ **Transitória.** Os dois *Environments* apontam hoje para a mesma URL, porque a instância de desenvolvimento ainda não existe. Enquanto durar, um *push* em `develop` publica em produção. Não use `develop` até a segunda instância estar de pé |
-| Mover os *secrets* para o *Environment* certo | Pendente. A chave de API e o segredo de webhook que hoje estão em `desenvolvimento` pertencem agora a `producao` |
-| *Pipeline* de CI/CD | **Vermelho** nas seis execuções anteriores. O *job* de qualidade passa; o deploy falhava por `HTTP 401` contra a instância que não existe mais |
-| Aplicar `db/schema/001_trilha_auditoria.sql` nos dois bancos | Pendente |
-| Plano do Railway | **Hobby assinado em 19/10/2026.** O período de teste estava em 2 dias de saldo e teria derrubado produção |
+| Decidir a plataforma e registrar em ADR | **Feito.** [ADR-005](adr/ADR-005-railway-nos-dois-ambientes.md): Railway nos dois ambientes |
+| Instância de produção | ✅ **No ar**, `n8n-production-81314.up.railway.app`, n8n 2.40.5 sobre Postgres |
+| Workflows publicados | ✅ **Três ativos**: intake v1.3.0, retenção v1.4.1 e métricas v1.1.0 |
+| URL pública | ✅ `/healthz` em 200 e `/webhook/intake` recusando chamada anônima com 403 |
+| Smoke tests 1, 2 e 3 | ✅ **Passam**, e passam **dentro do próprio *pipeline***, contra a URL pública |
+| Roteamento nas cinco áreas | ✅ As cinco recebem: Cível 272, Trabalhista 260, Criminal 166, Consumidor 154, Tributário 126 |
+| Credenciais na instância | ✅ **As quatro**, com os nomes exatos que os workflows procuram, testadas pelo próprio n8n |
+| Instância de desenvolvimento | ✅ **Existe e responde**, `n8n-development-b649.up.railway.app`, desde 19/10/2026 |
+| Separação de ambientes | ✅ **Real.** Cada *Environment* aponta para a sua instância, com *secrets* próprios. A variável de `desenvolvimento` apontava para produção e foi corrigida em 29/10 |
+| *Pipeline* de CI/CD | ✅ **Verde**, quatro execuções seguidas em `main`. A mais lenta levou 32 s, contra o teto de 5 min da rubrica |
+| Esquema aplicado no Postgres | ✅ **Dez objetos**: 4 tabelas e 9 *views*, pelo `db/migrar_tudo.sql` |
+| *Rollback* testado com evidência | ✅ **Executado em produção** nos dois sentidos, em 29/10. [`evidencias/2026-10-29-rollback.md`](evidencias/2026-10-29-rollback.md) |
+| Release SemVer com CHANGELOG | ✅ **v2.0.0** publicada, com GitHub Release |
+| Plano do Railway | **Hobby**, assinado em 19/10/2026 |
 | Registrar a situação das assinaturas | **Feito**, tabela em [`rotacao-credenciais.md`](rotacao-credenciais.md) |
-| Operar o desenvolvimento sob demanda | Decidido por custo: o serviço fica **parado** e é ligado só quando preciso. Ordem: ligar → *push* em `develop` → conferir deploy e *smoke tests* → desligar |
+| Paridade entre os ambientes | ⚠️ **Parcial.** Produção roda sobre Postgres e o desenvolvimento segue em SQLite. O serviço `Postgres-dev` já existe; ligar o n8n de dev a ele custa recriar a conta de dono e as credenciais de lá, pelo motivo da ADR-006 |
 
 ## Bloco 1 — Credenciais e LGPD (50% da nota)
 
@@ -51,33 +56,35 @@ Sem URL viva não há métrica, alerta nem medição de otimização.
 | Trio sagrado: `.env`, `.gitignore`, `.env.example` | Raiz | **Pronto** |
 | *Secrets* separados por ambiente | *GitHub Environments* `producao` e `desenvolvimento` | **Pronto** |
 | Procedimento de rotação documentado | [`rotacao-credenciais.md`](rotacao-credenciais.md) | **Pronto** |
-| Histórico de rotações preenchido | Idem | **Pronto**, com datas a conferir na origem |
+| Histórico de rotações preenchido | Idem | **Pronto** |
 | Mapa de dados pessoais com base legal por ponto de coleta | [`lgpd/mapa-dados-pessoais.md`](lgpd/mapa-dados-pessoais.md) | **Pronto**: 10 pontos, 3 avaliações de legítimo interesse |
 | Transferência internacional reconhecida e documentada | [`lgpd/transferencia-internacional.md`](lgpd/transferencia-internacional.md) | **Pronto**: 4 fluxos, art. 33, IX |
 | Política de retenção e exclusão | [`lgpd/politica-retencao-exclusao.md`](lgpd/politica-retencao-exclusao.md) | **Pronto** |
-| Mecanismo real que executa a retenção | [`db/retencao/`](../db/retencao/) e [`workflows/jurisflow-retencao.json`](../workflows/jurisflow-retencao.json) | **Publicado** na instância em 19/10/2026, `active: false`. Não ativa enquanto faltar a credencial Postgres no n8n |
-| Segunda via da purga, fora da plataforma | [`.github/workflows/retencao.yml`](../.github/workflows/retencao.yml) | **Escrita e validada**, nunca executada: falta `DATABASE_URL` nos *Environments* |
-| Cadastrar `DATABASE_URL` em `producao` e `desenvolvimento` | *GitHub Environments* | **Pendente** |
-| Expor o Postgres ao *runner* do GitHub, ou decidir não expor | Railway | **Pendente** |
+| Mecanismo real que executa a retenção | [`db/retencao/`](../db/retencao/) e [`workflows/jurisflow-retencao.json`](../workflows/jurisflow-retencao.json) | ✅ **Ativo** na instância, agendado para 03:15 |
+| Segunda via da purga, fora da plataforma | [`.github/workflows/retencao.yml`](../.github/workflows/retencao.yml) | ✅ **Executada em 29/10**, contra produção: 0 removidos, 0 vencidos restantes |
+| Papel de menor privilégio para a purga | [`db/schema/003_papel_purga.sql`](../db/schema/003_papel_purga.sql) | ✅ **Criado e comprovado**: lê a trilha e leva `permission denied` em `credentials_entity` |
+| `DATABASE_URL` no *Environment* `producao` | *GitHub Environments* | ✅ **Cadastrada**, apontando para o papel restrito e não para o dono do banco |
+| `DATABASE_URL` no *Environment* `desenvolvimento` | *GitHub Environments* | ⏳ **Em aberto por decisão.** Só existe um Postgres com dados; apontar o dev para ele faria a purga de `develop` apagar produção |
+| Expor o Postgres ao *runner* do GitHub | Railway | ✅ **Decidido e feito**: proxy TCP público, alcançável só pelo papel `jurisflow_purga` |
 | Sanitização de PII antes da chamada ao LLM | Nó `Sanitizar Entrada` | **Pronto desde a Etapa 1** |
-| Varredura de segredos no histórico | `gitleaks` no *pipeline* | **Verde** em todas as execuções |
-| Variáveis de pruning em todos os ambientes | `.env.example` e `docker-compose.yml` | ⚠️ **Pendente e bloqueante**: o n8n não usa este Postgres para execuções, logo o prazo de 72 h hoje **não tem mecanismo em operação** |
-| Retenção de 90 dias no Slack, com evidência | `docs/evidencias/` | **Pendente** |
-| Nó de auditoria gravando em Postgres | Workflow de intake | **Pendente**: hoje é sink em memória |
+| Varredura de segredos no histórico | `gitleaks` no *pipeline* | ✅ **Verde**, inclusive depois da reescrita do histórico |
+| Variáveis de *pruning* no ambiente | Serviço `n8n` no Railway | ✅ **As cinco definidas em produção.** Com o n8n sobre Postgres, `execution_entity` existe neste banco e o prazo de 72 h ganha a segunda barreira. Em desenvolvimento falta `EXECUTIONS_DATA_SAVE_ON_ERROR` |
+| Nó de auditoria gravando em Postgres | Workflow de intake | ✅ **Gravando**: 978 intakes na trilha e 3.904 *spans*, entre 20/10 e 29/10 |
+| Retenção de 90 dias no Slack, com evidência | `docs/evidencias/` | ⏳ **Pendente** |
 
 ## Bloco 2 — Observabilidade (25% da nota)
 
 | Exigência | Status |
 |---|---|
-| Instrumentação com *trace* e *spans* cobrindo o fluxo real | **Implementada no workflow**: 4 spans medidos, trace id = protocolo, esquema em [`db/schema/002_observabilidade.sql`](../db/schema/002_observabilidade.sql) e plano em [`observabilidade/plano-instrumentacao.md`](observabilidade/plano-instrumentacao.md). Falta aplicar ao workflow |
-| Cinco métricas: latência p50, p95 e p99; custo; erro; volume; qualidade | **Definidas e materializadas** em [`db/metricas/vw_metricas.sql`](../db/metricas/vw_metricas.sql), fonte única para relatório e dashboard |
-| *Thresholds* definidos e justificados para o contexto | **Definidos** em [`observabilidade/metricas-e-thresholds.md`](observabilidade/metricas-e-thresholds.md), cada um com a restrição de origem. ⚠️ **Provisórios**: derivam de cálculo e de restrição do caso, não de medição. A linha de base exige tráfego real |
-| Catálogo de alertas com prioridade, público e canal | **Pronto**: 13 alertas em [`observabilidade/alertas.md`](observabilidade/alertas.md). O A-10 está implementado e comprovado |
-| Lacuna: `latencia_ms` mede até o parse, e o SLA é até o Slack | **Identificada**, correção no passo 4.2 do plano |
-| Lacuna: tokens não são capturados, logo o custo é cálculo e não medição | **Identificada**, correção no passo 4.1 do plano |
-| Alerta funcional, com prioridade (P1/P2/P3), público e canal | ✅ **Disparou de verdade** em 20/10/2026: A-10, P2, `#juris-ops`, com a contraprova de que cala quando não há o que purgar. [`evidencias/2026-10-20-alerta-a10.md`](evidencias/2026-10-20-alerta-a10.md) |
-| Dashboard curado e linkado no README | Pendente. O plano Hobby do Railway inclui métricas, logs e **alertas nativos**, com 7 dias de retenção de log. É a fonte natural das métricas de infraestrutura; a série histórica mais longa fica na trilha de auditoria em Postgres |
-| Automatizar as verificações mensais da política de retenção | Pendente, descrito na seção 4 da política |
+| Instrumentação com *trace* e *spans* cobrindo o fluxo real | ✅ **Gravando em Postgres.** 4 *spans* por intake, *trace id* = protocolo. A escolha de medir quatro, e não os sete do desenho, está justificada na seção 3 do [plano](observabilidade/plano-instrumentacao.md): o n8n não expõe início e fim de cada nó, e *span* com duração fabricada é pior que *span* ausente |
+| Cinco métricas: latência p50, p95 e p99; custo; erro; volume; qualidade | ✅ **Materializadas** em [`db/metricas/vw_metricas.sql`](../db/metricas/vw_metricas.sql), fonte única para relatório e dashboard |
+| *Thresholds* definidos e justificados para o contexto | ✅ **Definidos** em [`observabilidade/metricas-e-thresholds.md`](observabilidade/metricas-e-thresholds.md). ⚠️ Vieram de cálculo e de restrição do caso; os 978 intakes que os conferem são **carga sintética**, e não demanda real |
+| Catálogo de alertas com prioridade, público e canal | ✅ **13 alertas** em [`observabilidade/alertas.md`](observabilidade/alertas.md) |
+| Alerta funcional, com prioridade, público e canal | ✅ **Disparou de verdade**: A-10, P2, `#juris-ops`, com a contraprova de que cala quando não há o que purgar. [`evidencias/2026-10-20-alerta-a10.md`](evidencias/2026-10-20-alerta-a10.md) |
+| Dashboard curado e linkado no README | ✅ **Linkado**, com os números medidos reproduzidos no próprio README, porque o painel do Railway exige login |
+| Lacuna: `latencia_ms` media até o parse, e o SLA é até o Slack | ✅ **Fechada.** `duracao_total_ms` mede até a entrega no Slack e é a que fecha o SLA |
+| Lacuna: tokens não eram capturados, logo o custo era cálculo | ✅ **Fechada.** `tokens_entrada` e `tokens_saida` vêm do provedor. O custo medido ficou em US$ 0,0000529 por intake, cerca de metade dos US$ 0,000103 que a estimativa previa |
+| Automatizar as verificações mensais da política de retenção | ⏳ **Pendente**, descrito na seção 4 da política |
 
 ## Bloco 3 — Otimização medida (parte dos 25%)
 
@@ -96,15 +103,23 @@ que ataca o risco residual da seção 5 do mapa de dados; e *fallback* de proved
 
 | Exigência | Status |
 |---|---|
-| Seção de LGPD no README | **Pronta** |
-| Seção de observabilidade | Pendente |
-| Seção de otimizações | Pendente |
-| Seção de *troubleshooting* | Pendente |
-| Vídeo de 3 a 5 minutos, com a sua voz | Pendente |
-| Vídeo mostrando o alerta e o que o dispara | Pendente |
-| Vídeo mostrando a sanitização antes da chamada ao LLM | Pendente |
-| Vídeo mostrando a otimização, antes e depois | Pendente |
-| Observações sobre acertos, erros e aprendizados | Pendente |
+| Seção de LGPD no README | ✅ **Pronta** |
+| Seção de observabilidade | ✅ **Pronta**, com dashboard e números medidos |
+| Seção de otimizações | ✅ **Pronta** |
+| Seção de *troubleshooting* | ✅ **Pronta**, nove cenários |
+| Vídeo de 3 a 5 minutos, com a sua voz | ⏳ **Pendente** |
+| Vídeo mostrando o alerta e o que o dispara | ⏳ **Pendente**. Material em [`evidencias/2026-10-20-alerta-a10.md`](evidencias/2026-10-20-alerta-a10.md) |
+| Vídeo mostrando a sanitização antes da chamada ao LLM | ⏳ **Pendente**. Nó `Sanitizar Entrada`, no editor do n8n |
+| Vídeo mostrando a otimização, antes e depois | ⏳ **Pendente**. Números em [`otimizacoes/001`](otimizacoes/001-compressao-do-system-prompt.md) |
+| Observações sobre acertos, erros e aprendizados | ⏳ **Pendente**. O incidente de nove dias é o melhor material disponível |
+
+## O que falta, em uma lista só
+
+1. **O vídeo**, e tudo o que ele precisa mostrar. É o único item da rubrica que não pode ser delegado.
+2. **Retenção de 90 dias no Slack**, com evidência.
+3. **Automatizar as verificações mensais** da política de retenção.
+4. **Paridade do ambiente de desenvolvimento**, que é argumento da ADR-005 e não exigência da rubrica.
+5. **`DATABASE_URL` em `desenvolvimento`**, que depende do item anterior.
 
 ## Critérios de anulação, conferir antes de entregar
 
@@ -112,12 +127,17 @@ que ataca o risco residual da seção 5 do mapa de dados; e *fallback* de proved
 |---|---|
 | Chave de API real no código ou no histórico | `gitleaks detect --source . --verbose` antes de cada entrega |
 | Dado pessoal real sem anonimização | Os testes usam CPF `111.444.777-35`, válido pelo dígito verificador e de ninguém |
-| Métrica inventada, sem respaldo em dashboard ou log | Toda número do relatório precisa ter origem rastreável |
-| Medição de otimização sem evidência | Guardar a saída bruta das duas medições |
+| Métrica inventada, sem respaldo em dashboard ou log | Todo número do relatório tem origem rastreável: as *views* de `vw_metricas.sql` e o painel do Railway |
+| Medição de otimização sem evidência | A saída bruta das duas medições está em `docs/evidencias/` |
 
 ### Fora do repositório, mas do mesmo assunto
 
-Há arquivos `.txt` com tokens em claro na pasta acima do repositório (`gh-token.txt`,
-`n8n-api-key-*.txt`, `slack-bot-token.txt`, `webhook-secret-*.txt`). Não estão versionados e
-não entram na varredura, mas aparecem em gravação de tela e em captura de pasta. Mover para
-fora da árvore do projeto antes de gravar o vídeo.
+Há arquivos `.txt` com segredos em claro na pasta acima do repositório: `gh-token.txt`,
+`n8n-api-key-*.txt`, `slack-bot-token.txt`, `webhook-secret-*.txt`, `openIA API.txt`,
+`N8N_ENCRYPTION_KEY.txt` e `n8n-encryption-key-dev.txt`. Não estão versionados e não entram na
+varredura, mas aparecem em gravação de tela e em captura de pasta. **Mover para fora da árvore
+do projeto antes de gravar o vídeo.**
+
+Dois podem ser apagados: `jurisflow-prod.txt`, cuja chave devolve 401, e `Edcode-railway.txt`,
+que não era um token do Railway. Os dois arquivos de `N8N_ENCRYPTION_KEY` são o oposto: são a
+apólice contra o acidente de 20/10 se repetir, e merecem cópia fora deste disco.
