@@ -15,6 +15,8 @@ Todas as mudanças relevantes deste projeto são registradas aqui. O formato seg
 - `workflows/jurisflow-retencao.json`: agendador diário às 03:15, que executa a purga, grava a contagem e só notifica `#juris-ops` quando houve remoção ou falha
 - `.github/workflows/retencao.yml`: segunda via da purga às 04:15, hospedada fora do n8n. Usa a defasagem de uma hora como verificação, já que remover alguma coisa significa que a via do n8n não rodou, e alerta em P2 nesse caso. Confere também que não restou registro vencido e publica o resumo no *GitHub Step Summary*
 - `docs/checklist-etapa-2.md`, com o estado de cada exigência da etapa
+- `db/schema/003_papel_purga.sql`: papel `jurisflow_purga`, de menor privilégio, para a segunda via da purga. Alcança a trilha, os spans, as execuções vencidas e o registro de purga, e nada mais. Existe porque o n8n passa a dividir banco com a trilha, e a URL que vai para o *runner* do GitHub não pode ser a do papel dono
+- [`docs/adr/ADR-006`](docs/adr/ADR-006-postgres-como-banco-do-n8n.md): aponta o n8n para o Postgres do projeto e revê a escolha do caminho 1 da seção 2.1 da política de retenção. A decisão de 20/10 recusava a troca pelo preço de refazer à mão as quatro credenciais, a chave de API e o histórico; a perda da instância em 29/10 cobrou esse preço de qualquer modo, e a premissa caiu junto. Traz `execution_entity` para este banco e dá mecanismo ao prazo de 72 horas
 
 ### Modificado
 - `README.md`: seção de LGPD e separação da seção de segurança de credenciais
