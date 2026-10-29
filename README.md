@@ -175,11 +175,68 @@ Duas camadas, que respondem perguntas diferentes e não se substituem.
 Um container saudável que não classifica nenhum caso passa pela primeira camada e é pego
 pela segunda. É por isso que as duas existem.
 
-**Dashboard:** painel do serviço no Railway, para infraestrutura, e as *views* de
-[`db/metricas/vw_metricas.sql`](db/metricas/vw_metricas.sql) para a aplicação. A
-`vw_painel_24h` resume as cinco métricas em uma linha. Relatório e dashboard leem da mesma
-consulta, de propósito: a forma de garantir que os números batem não é conferir duas fontes,
-é não ter duas.
+### Dashboard
+
+**Infraestrutura:** [painel do serviço `n8n` no Railway](https://railway.com/project/92a12c78-e8f6-43c9-ba22-029f4218931f/service/52a38610-d05a-4751-87c0-315712d0b94e?environmentId=e9389aad-f152-4874-8782-8f3bb8e88849) — CPU, memória, rede, disco do
+volume e contagem de requisições HTTP por faixa de status. Exige login na conta que hospeda o
+projeto, e por isso os números medidos estão reproduzidos abaixo.
+
+**Aplicação:** as *views* de [`db/metricas/vw_metricas.sql`](db/metricas/vw_metricas.sql),
+com a `vw_painel_24h` resumindo as cinco métricas em uma linha. Relatório e dashboard leem da
+mesma consulta, de propósito: a forma de garantir que os números batem não é conferir duas
+fontes, é não ter duas.
+
+```sql
+SELECT * FROM vw_painel_24h;
+```
+
+#### Medido em 29/10/2026
+
+Infraestrutura, última hora, do painel do Railway:
+
+| | atual | média | máximo | limite |
+|---|---|---|---|---|
+| CPU | 0 vCPU (0%) | < 0,01 vCPU | 0,08 vCPU | 8,0 vCPU |
+| Memória | 520 MB (6%) | 571 MB | 632 MB | 8,00 GB |
+| Disco do volume | 33 MB (7%) | 33 MB | 33 MB | 500 MB |
+
+Requisições HTTP: **227 no total**, sendo 221 em 2xx (97,4%) e 6 em 4xx (2,6%). Nenhuma 5xx.
+As 4xx são os `403` do `smoke_02`, que existe justamente para provar que o webhook recusa
+chamada sem assinatura.
+
+Aplicação, sobre **978 intakes** gravados na trilha entre 20/10 e 29/10:
+
+| Métrica | Medido | Threshold | Situação |
+|---|---|---|---|
+| Latência p50 | 1.023 ms | 5 s | dentro |
+| Latência p95 | 1.395 ms | 60 s (SLA do briefing) | dentro, com folga de 43× |
+| Latência p99 | 2.119 ms | 110 s | dentro |
+| Dentro do SLA | 100,00% | — | — |
+| Custo por intake | US$ 0,0000529 | projeção > US$ 30/mês | ~US$ 3,97/mês a 2.500/dia |
+| Taxa de erro | 0,20% | > 1% em 1 h | dentro |
+| Volume | 978 intakes | < 20% da média da mesma hora | — |
+| Qualidade | 0% de revisão manual | > 15% em 24 h | dentro |
+
+Por etapa, o que o *trace* mostra sobre onde o tempo é gasto:
+
+| Span | p50 | p95 |
+|---|---|---|
+| `classificacao_llm` | 796 ms | 1.141 ms |
+| `entrega_slack` | 217 ms | 275 ms |
+| `parse` | 0 ms | 1 ms |
+| `sanitizacao` | 0 ms | 1 ms |
+
+A classificação domina, como o plano de instrumentação previa, e é por isso que a otimização
+atacou o *prompt* e não as outras etapas: somadas, elas não chegam a 2 ms.
+
+Distribuição por área, que é o que o alerta A-12 vigia: Cível 272, Trabalhista 260, Criminal
+166, Consumidor 154 e Tributário 126. As cinco recebem.
+
+> **O custo medido ficou abaixo do calculado.** A linha de base estimava ~US$ 0,000103 por
+> intake; a medição sobre 978 execuções deu **US$ 0,0000529**, cerca de metade. A estimativa
+> era conservadora na contagem de *tokens* de saída, que o teto de 60 raramente aproxima. Fica
+> registrado porque o número calculado continua no `metricas-e-thresholds.md`, e dois números
+> diferentes para a mesma coisa precisam de explicação, não de escolha silenciosa.
 
 ### As cinco métricas
 
@@ -194,9 +251,12 @@ consulta, de propósito: a forma de garantir que os números batem não é confe
 Detalhe e justificativa de cada limite em
 [`docs/observabilidade/metricas-e-thresholds.md`](docs/observabilidade/metricas-e-thresholds.md).
 
-> ⚠️ **Os thresholds são provisórios.** Derivam de restrições do caso e de cálculo, não de
-> medição. A linha de base real exige tráfego acumulado. Isso está dito aqui porque número
-> sem evidência não conta.
+> ⚠️ **Os thresholds vieram de cálculo e de restrição do caso, não de demanda real.** Os
+> 978 intakes medidos são carga sintética, gerada por `scripts/carga_sintetica.py` e pelos
+> *smoke tests*: provam que a instrumentação mede e que o sistema cabe no SLA com folga, e não
+> provam qual é o perfil de uso de um escritório de verdade. O limite de volume, em especial,
+> compara cada hora com a média da mesma hora nos sete dias anteriores, e isso só passa a
+> significar alguma coisa depois de uma semana de tráfego real.
 
 ### Alertas
 
