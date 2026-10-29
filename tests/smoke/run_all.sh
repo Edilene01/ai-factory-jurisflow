@@ -5,10 +5,28 @@ set -u
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 falhas=0
 
+# No runner do CI é python3; no Git Bash do Windows, python3 é o atalho da
+# Microsoft Store, que não executa nada e ainda devolve sucesso. Escolher o
+# interpretador aqui evita que o teste pareça quebrado quando é só o ambiente.
+PY="${PYTHON:-}"
+if [ -z "$PY" ]; then
+  for cand in python3 python py; do
+    if command -v "$cand" > /dev/null 2>&1 && "$cand" -c "import sys" > /dev/null 2>&1; then
+      PY="$cand"
+      break
+    fi
+  done
+fi
+if [ -z "$PY" ]; then
+  echo "ERRO: nenhum interpretador Python utilizável. Defina PYTHON=/caminho/do/python."
+  exit 2
+fi
+echo "Interpretador: $PY"
+
 for teste in "$DIR"/smoke_*.py; do
   echo "=============================================="
   echo ">> $(basename "$teste")"
-  python3 "$teste" || falhas=$((falhas + 1))
+  "$PY" "$teste" || falhas=$((falhas + 1))
 done
 
 echo "=============================================="
