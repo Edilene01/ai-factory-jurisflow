@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2026 Wellington Monteiro
+Copyright (c) 2026 Edilene Chagas Faria
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +19,20 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+Nota de procedência
+
+A licença acima cobre o trabalho feito neste repositório.
+
+O protótipo que deu origem ao projeto foi fornecido como material da disciplina
+AI Factory: Build, Deploy and Showcase, de autoria do professor Wellington
+Monteiro, e o arquivo de licença original trazia o nome dele. O material
+herdado está preservado sem alteração em `docs/heranca/`, e a auditoria da
+adoção, em `docs/auditoria-prototipo.md`, registra achado por achado o que foi
+recebido e o que foi reescrito.
+
+A troca do titular reflete a autoria do que está aqui: o workflow evoluído, a
+aplicação web, a documentação, os testes e o esquema de dados. O crédito pelo
+ponto de partida permanece onde é devido.

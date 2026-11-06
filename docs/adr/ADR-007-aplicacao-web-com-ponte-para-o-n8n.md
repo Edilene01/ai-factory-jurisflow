@@ -94,4 +94,5 @@ A decisão se confirma quando:
 2. O intake pela aplicação produzir protocolo e classificação corretos. **Verificado**: `JF-20261106-2M44FS`, área Trabalhista, urgência alta.
 3. O limite de taxa recusar o excesso com 429. **Verificado**.
 4. O painel refletir os mesmos números do endpoint de métricas. **Verificado**.
-5. A URL pública permanecer estável por 24 horas antes da avaliação. **Pendente**, depende da publicação.
+5. A aplicação estar publicada e funcional em URL própria. **Verificado em 06/11/2026**: https://ai-factory-jurisflow-production.up.railway.app, com intake `JF-20261106-05YYJ5` classificado como Consumidor pelo navegador.
+6. A URL permanecer estável por 24 horas antes da avaliação. **Em curso**, contagem iniciada em 06/11/2026 às 15:20; ver [`evidencias/2026-11-06-aplicacao-publicada.md`](../evidencias/2026-11-06-aplicacao-publicada.md).
