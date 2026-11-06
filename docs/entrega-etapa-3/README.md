@@ -33,8 +33,8 @@ pandoc docs/entrega-etapa-3/analise-critica.md -o analise-critica.pdf
 pandoc docs/entrega-etapa-3/one-pager-executivo.md -o one-pager.pdf
 ```
 
-Confira a paginação depois de converter. O one-pager tem **451 palavras e três tabelas**,
-que cabem em uma página A4 com margens padrão. Se ainda assim estourar por causa da fonte,
+Confira a paginação depois de converter. O one-pager tem **509 palavras e uma tabela**, que
+cabem em uma página A4 com margens padrão. Se ainda assim estourar por causa da fonte,
 reduza para 10pt:
 
 ```bash
@@ -42,7 +42,8 @@ pandoc docs/entrega-etapa-3/one-pager-executivo.md -o one-pager.pdf -V fontsize=
 ```
 
 Se precisar cortar, o candidato é o parágrafo da otimização: os 21,2% já aparecem no vídeo e
-na análise crítica.
+na análise crítica. O parágrafo da adoção no portal, esse eu manteria, porque é o único
+argumento do documento que fala de escala real.
 
 ## Antes de submeter
 

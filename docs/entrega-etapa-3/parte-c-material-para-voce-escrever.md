@@ -30,6 +30,12 @@ Candidatas que o projeto já registrou, caso queira partir delas. Não precisa u
 | Fallback de provedor, com `ANTHROPIC_API_KEY` já reservada no `.env.example` | README, seção de otimizações |
 | Corpus de teste com casos ambíguos, para medir qualidade de verdade | Limitações da análise crítica |
 | Incorporar as cláusulas-padrão da ANPD aos contratos | `docs/lgpd/transferencia-internacional.md` |
+| Adoção no portal do escritório, com e-mail no lugar do Slack, áreas trocadas e você como controladora | `docs/evolucao/001-jurisflow-no-portal-do-escritorio.md` |
+
+Sobre a última linha: a ideia é sua, saiu da conversa em que você perguntou se dava para pôr o
+JurisFlow no seu portal. O documento só organiza o que foi decidido lá. Se ela entrar na Parte
+C, escreva com suas palavras o motivo de ter pensado nisso, porque esse motivo é a parte que
+nenhum documento registra.
 
 O que torna uma proposta "concreta" para o avaliador: ela diz o que muda no sistema, não o que
 seria bom em geral. Comparar "melhorar a qualidade da classificação" com "trocar a regex por

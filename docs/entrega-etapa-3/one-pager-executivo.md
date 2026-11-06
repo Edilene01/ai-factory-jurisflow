@@ -52,3 +52,7 @@ a economia isolada.
 
 Reconhecimento de entidades nomeadas antes da chamada, para fechar a lacuna da sanitização, e
 fila de reprocessamento para a entrega. Nenhuma das duas pede aumento de orçamento.
+
+**E a prova de que escala.** O sistema vai ser adotado em atendimento real, no portal de um
+escritório de advocacia, com servidor e e-mail já contratados. Custo adicional: centavos
+mensais de token. O desenho está em [`../evolucao/001-jurisflow-no-portal-do-escritorio.md`](../evolucao/001-jurisflow-no-portal-do-escritorio.md).
