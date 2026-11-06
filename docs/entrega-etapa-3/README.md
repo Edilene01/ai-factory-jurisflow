@@ -33,9 +33,16 @@ pandoc docs/entrega-etapa-3/analise-critica.md -o analise-critica.pdf
 pandoc docs/entrega-etapa-3/one-pager-executivo.md -o one-pager.pdf
 ```
 
-Confira a paginação depois de converter. O one-pager **precisa caber em uma página**, e a
-rubrica penaliza quem estoura. Se passar, corte a seção "O que ainda não funciona" para duas
-linhas em vez de três parágrafos.
+Confira a paginação depois de converter. O one-pager tem **451 palavras e três tabelas**,
+que cabem em uma página A4 com margens padrão. Se ainda assim estourar por causa da fonte,
+reduza para 10pt:
+
+```bash
+pandoc docs/entrega-etapa-3/one-pager-executivo.md -o one-pager.pdf -V fontsize=10pt -V geometry:margin=2cm
+```
+
+Se precisar cortar, o candidato é o parágrafo da otimização: os 21,2% já aparecem no vídeo e
+na análise crítica.
 
 ## Antes de submeter
 
