@@ -1,0 +1,287 @@
+/* JurisFlow — folha de estilo única.
+   Paleta sóbria, de setor jurídico: azul-petróleo para estrutura, bordô para
+   acento e urgência. Sem framework: a aplicação tem duas telas, e carregar um
+   framework inteiro custaria mais do que o CSS que ele pouparia. */
+
+:root {
+  --tinta: #10213a;
+  --tinta-suave: #44557a;
+  --tinta-fraca: #7a89a6;
+  --papel: #f7f8fb;
+  --papel-puro: #ffffff;
+  --borda: #e2e6ef;
+  --acento: #7d1935;
+  --acento-claro: #fdf2f5;
+  --verde: #1b6b4a;
+  --verde-claro: #edf7f2;
+  --ambar: #8a5a0b;
+  --ambar-claro: #fdf6e8;
+  --sombra: 0 1px 2px rgba(16, 33, 58, .05), 0 8px 24px rgba(16, 33, 58, .06);
+  --raio: 12px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--papel);
+  color: var(--tinta);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--acento); }
+
+/* ---------- cabeçalho ---------- */
+.topo {
+  background: var(--papel-puro);
+  border-bottom: 1px solid var(--borda);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.topo-interno {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  font-size: 1.05rem;
+  text-decoration: none;
+  color: var(--tinta);
+}
+.marca svg { flex: none; }
+.marca span small {
+  display: block;
+  font-weight: 500;
+  font-size: .72rem;
+  color: var(--tinta-fraca);
+  letter-spacing: .02em;
+}
+.nav { margin-left: auto; display: flex; gap: 6px; }
+.nav a {
+  padding: 7px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--tinta-suave);
+  font-size: .9rem;
+  font-weight: 500;
+}
+.nav a:hover { background: var(--papel); color: var(--tinta); }
+.nav a.ativo { background: var(--tinta); color: #fff; }
+
+/* ---------- estrutura ---------- */
+.conteudo { max-width: 1080px; margin: 0 auto; padding: 36px 20px 64px; }
+.estreito { max-width: 680px; }
+
+h1 {
+  font-size: 1.9rem;
+  letter-spacing: -.02em;
+  margin: 0 0 8px;
+  line-height: 1.25;
+}
+.subtitulo { color: var(--tinta-suave); margin: 0 0 28px; font-size: 1.02rem; }
+
+.cartao {
+  background: var(--papel-puro);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  padding: 26px;
+}
+
+/* ---------- formulário ---------- */
+.campo { margin-bottom: 18px; }
+.campo label {
+  display: block;
+  font-weight: 600;
+  font-size: .88rem;
+  margin-bottom: 6px;
+}
+.campo .ajuda {
+  font-weight: 400;
+  color: var(--tinta-fraca);
+  font-size: .82rem;
+  display: block;
+  margin-top: 2px;
+}
+input[type="text"], textarea {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid var(--borda);
+  border-radius: 9px;
+  font: inherit;
+  font-size: .95rem;
+  color: var(--tinta);
+  background: var(--papel-puro);
+  transition: border-color .15s, box-shadow .15s;
+}
+input[type="text"]:focus, textarea:focus {
+  outline: none;
+  border-color: var(--acento);
+  box-shadow: 0 0 0 3px rgba(125, 25, 53, .1);
+}
+textarea { resize: vertical; min-height: 128px; }
+.contador { text-align: right; font-size: .78rem; color: var(--tinta-fraca); margin-top: 4px; }
+
+button {
+  font: inherit;
+  font-weight: 600;
+  border: none;
+  border-radius: 9px;
+  padding: 12px 22px;
+  background: var(--acento);
+  color: #fff;
+  cursor: pointer;
+  transition: background .15s, transform .05s;
+}
+button:hover:not(:disabled) { background: #65142b; }
+button:active:not(:disabled) { transform: translateY(1px); }
+button:disabled { opacity: .55; cursor: not-allowed; }
+
+.girando {
+  display: inline-block;
+  width: 14px; height: 14px;
+  margin-right: 8px;
+  border: 2px solid rgba(255,255,255,.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: girar .7s linear infinite;
+  vertical-align: -2px;
+}
+@keyframes girar { to { transform: rotate(360deg); } }
+
+/* ---------- aviso de privacidade ---------- */
+.aviso {
+  background: var(--papel);
+  border: 1px solid var(--borda);
+  border-left: 3px solid var(--tinta-suave);
+  border-radius: 8px;
+  padding: 13px 15px;
+  font-size: .83rem;
+  color: var(--tinta-suave);
+  margin-bottom: 22px;
+}
+.aviso strong { color: var(--tinta); }
+
+/* ---------- resultado ---------- */
+.resultado { margin-top: 24px; animation: surgir .3s ease-out; }
+@keyframes surgir { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.protocolo {
+  background: var(--tinta);
+  color: #fff;
+  border-radius: var(--raio) var(--raio) 0 0;
+  padding: 20px 24px;
+}
+.protocolo .rotulo { font-size: .76rem; text-transform: uppercase; letter-spacing: .09em; opacity: .7; }
+.protocolo .numero { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+
+.detalhes {
+  background: var(--papel-puro);
+  border: 1px solid var(--borda);
+  border-top: none;
+  border-radius: 0 0 var(--raio) var(--raio);
+  padding: 20px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 26px;
+}
+.detalhe .rotulo { font-size: .74rem; text-transform: uppercase; letter-spacing: .07em; color: var(--tinta-fraca); }
+.detalhe .valor { font-size: 1.04rem; font-weight: 600; }
+
+.etiqueta {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: .82rem;
+  font-weight: 600;
+}
+.etiqueta.alta { background: var(--acento-claro); color: var(--acento); }
+.etiqueta.media { background: var(--ambar-claro); color: var(--ambar); }
+.etiqueta.baixa { background: var(--verde-claro); color: var(--verde); }
+
+.erro {
+  background: var(--acento-claro);
+  border: 1px solid #f0d3db;
+  border-left: 3px solid var(--acento);
+  color: var(--acento);
+  border-radius: 8px;
+  padding: 13px 15px;
+  margin-top: 18px;
+  font-size: .9rem;
+}
+
+/* ---------- painel ---------- */
+.placas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(176px, 1fr));
+  gap: 14px;
+  margin-bottom: 26px;
+}
+.placa {
+  background: var(--papel-puro);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 17px 19px;
+  box-shadow: var(--sombra);
+}
+.placa .rotulo { font-size: .76rem; text-transform: uppercase; letter-spacing: .07em; color: var(--tinta-fraca); }
+.placa .valor { font-size: 1.75rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.02em; margin-top: 2px; }
+.placa .nota { font-size: .79rem; color: var(--tinta-fraca); }
+.placa.bom .valor { color: var(--verde); }
+.placa.atencao .valor { color: var(--ambar); }
+
+.grade-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+@media (max-width: 760px) { .grade-2 { grid-template-columns: 1fr; } }
+
+h2 { font-size: 1.05rem; margin: 0 0 14px; letter-spacing: -.01em; }
+
+.barra-linha { margin-bottom: 13px; }
+.barra-topo { display: flex; justify-content: space-between; font-size: .85rem; margin-bottom: 4px; }
+.barra-topo .nome { font-weight: 600; }
+.barra-topo .num { color: var(--tinta-fraca); font-variant-numeric: tabular-nums; }
+.barra-trilho { height: 7px; background: var(--papel); border-radius: 999px; overflow: hidden; }
+.barra-preenche { height: 100%; background: var(--tinta); border-radius: 999px; transition: width .4s ease-out; }
+.barra-preenche.destaque { background: var(--acento); }
+
+table { width: 100%; border-collapse: collapse; font-size: .87rem; }
+th {
+  text-align: left;
+  font-size: .73rem;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--tinta-fraca);
+  padding: 0 8px 8px 0;
+  border-bottom: 1px solid var(--borda);
+  font-weight: 600;
+}
+td { padding: 9px 8px 9px 0; border-bottom: 1px solid var(--borda); font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: none; }
+
+.rodape {
+  margin-top: 30px;
+  padding-top: 18px;
+  border-top: 1px solid var(--borda);
+  font-size: .82rem;
+  color: var(--tinta-fraca);
+}
+.rodape code { background: var(--papel-puro); padding: 1px 5px; border-radius: 4px; border: 1px solid var(--borda); }
+
+.esqueleto {
+  background: linear-gradient(90deg, var(--borda) 25%, var(--papel) 50%, var(--borda) 75%);
+  background-size: 200% 100%;
+  animation: brilho 1.3s infinite;
+  border-radius: 5px;
+  color: transparent;
+}
+@keyframes brilho { from { background-position: 200% 0; } to { background-position: -200% 0; } }
