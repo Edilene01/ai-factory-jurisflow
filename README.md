@@ -4,7 +4,8 @@ Triagem automática de formulários de intake jurídico: recebe o caso, classifi
 urgência, devolve um protocolo ao cliente e entrega o caso ao time responsável no Slack,
 com a identidade do solicitante mascarada.
 
-**URL pública:** https://n8n-production-81314.up.railway.app/webhook/intake
+**Aplicação:** https://ai-factory-jurisflow-production.up.railway.app · [formulário](https://ai-factory-jurisflow-production.up.railway.app/) · [painel de operação](https://ai-factory-jurisflow-production.up.railway.app/painel)
+**API de intake:** `https://n8n-production-81314.up.railway.app/webhook/intake`
 *A instância anterior, no n8n Cloud, deixou de existir em outubro de 2026. A [ADR-005](docs/adr/ADR-005-railway-nos-dois-ambientes.md) registra por que produção passou para o Railway.*
 **Estado da entrega:** ver [`docs/estado-da-entrega.md`](docs/estado-da-entrega.md), que registra o que está verificado e o que ainda não está
 **README v1.0** · **Versão:** v1.0.0 · [CHANGELOG](CHANGELOG.md) · [Releases](../../releases)
@@ -45,6 +46,8 @@ na branch principal. O caminho de uma requisição:
 | Não classificado | `#juris-triagem-manual` |
 
 ## A aplicação
+
+**No ar em https://ai-factory-jurisflow-production.up.railway.app**, sem login: o formulário é público por natureza e o painel serve apenas agregados.
 
 Duas telas, servidas por um backend próprio em FastAPI.
 
