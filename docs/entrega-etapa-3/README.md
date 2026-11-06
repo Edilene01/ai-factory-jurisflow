@@ -29,9 +29,17 @@ Os artefatos finais e onde cada um é cobrado.
 O enunciado fala em documento de 1 a 2 páginas, e o Markdown daqui converte direto:
 
 ```bash
-pandoc docs/entrega-etapa-3/analise-critica.md -o analise-critica.pdf
+pandoc docs/entrega-etapa-3/analise-critica.md -o analise-critica.pdf -V geometry:margin=2cm
+```
+
+```bash
 pandoc docs/entrega-etapa-3/one-pager-executivo.md -o one-pager.pdf
 ```
+
+**Orçamento de palavras da análise crítica.** As Partes A e B foram enxugadas de 1.694 para
+**883 palavras**, pouco mais de uma página e meia com margem de 2 cm. Sobram cerca de **350 a
+400 palavras** para a Parte C dentro do limite de duas páginas. Se a sua Parte C passar disso,
+a saída é `-V fontsize=10pt`, que abre mais umas 200 palavras sem ficar apertado.
 
 Confira a paginação depois de converter. O one-pager tem **509 palavras e uma tabela**, que
 cabem em uma página A4 com margens padrão. Se ainda assim estourar por causa da fonte,
