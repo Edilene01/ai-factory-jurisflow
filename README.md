@@ -44,6 +44,39 @@ na branch principal. O caminho de uma requisição:
 | Consumidor | `#juris-consumidor` |
 | Não classificado | `#juris-triagem-manual` |
 
+## A aplicação
+
+Duas telas, servidas por um backend próprio em FastAPI.
+
+| Captura | O que mostra |
+|---|---|
+| ![Formulário de intake](docs/capturas/01-intake-formulario.jpg) | **`/` — Enviar caso.** O formulário que a pessoa que procura o escritório usa. O aviso de privacidade declara a base legal e o que é removido antes da classificação |
+| ![Resultado da triagem](docs/capturas/02-intake-resultado.jpg) | **Resultado.** Protocolo, área e urgência em segundos. A urgência vem etiquetada por cor |
+| ![Painel de operação](docs/capturas/03-painel-operacao.jpg) | **`/painel` — Operação.** As cinco métricas, latência por etapa, distribuição por área e o registro das purgas de retenção |
+| ![Limite de taxa](docs/capturas/04-limite-de-taxa.jpg) | **Limite de taxa.** Cada intake custa uma chamada de LLM; o teto é de 5 por minuto por IP |
+
+O backend existe por uma razão concreta, e não por gosto: o webhook do n8n exige o header
+`X-Jurisflow-Signature`, e segredo que chega ao navegador não é segredo. A ponte guarda o
+valor no servidor e nunca o devolve ao cliente. A decisão, com as alternativas descartadas,
+está na [ADR-007](docs/adr/ADR-007-aplicacao-web-com-ponte-para-o-n8n.md).
+
+## Stack
+
+| Camada | Tecnologia | Por quê |
+|---|---|---|
+| Aplicação web | FastAPI 0.162 + Uvicorn 0.54 | Duas telas e dois endpoints de ponte; assíncrono, que é o que o encaminhamento ao n8n pede |
+| Interface | HTML, CSS e JavaScript sem framework | São duas telas. Um framework custaria mais do que o código que pouparia |
+| Orquestração | n8n 2.40.5, imagem fixada | Decisão da [ADR-001](docs/adr/ADR-001-manter-n8n-como-orquestrador.md): evoluir o protótipo herdado em vez de reescrever |
+| Classificação | OpenAI `gpt-4o-mini`, via HTTP Request | O nó nativo quebrou por versão na Etapa 2; HTTP não muda de forma |
+| Persistência | PostgreSQL | Trilha de auditoria, spans e registro de purga. Desde a [ADR-006](docs/adr/ADR-006-postgres-como-banco-do-n8n.md), também o banco do n8n |
+| Entrega | Slack | Seis canais de área mais `#juris-ops` para operação |
+| Hospedagem | Railway | Autorizada pelo briefing; os dois ambientes na mesma plataforma pela [ADR-005](docs/adr/ADR-005-railway-nos-dois-ambientes.md) |
+| CI/CD | GitHub Actions | Qualidade, gitleaks, publicação por API e smoke tests |
+
+Dependências com versões pinadas em [`app/requirements.txt`](app/requirements.txt), incluindo
+as transitivas. Pinar não é formalidade: foi a divergência de versão que quebrou o roteamento
+na Etapa 2.
+
 ## Arquitetura
 
 Os diagramas C4 estão em [`docs/architecture/`](docs/architecture/), nos níveis de contexto
@@ -89,6 +122,33 @@ curl -X POST http://localhost:5678/webhook/intake \
 ```
 
 Mais exemplos para estressar o classificador em [`docs/exemplos-intakes.md`](docs/exemplos-intakes.md).
+
+### Rodar a aplicação web
+
+```bash
+cd app
+python -m venv .venv && . .venv/Scripts/activate   # no Linux: . .venv/bin/activate
+pip install -r requirements.txt
+
+export N8N_PUBLIC_URL=https://sua-instancia.up.railway.app
+export JURISFLOW_WEBHOOK_SECRET=...                 # o mesmo da credencial no n8n
+uvicorn main:app --port 8080
+```
+
+Abre em `http://localhost:8080`, com o painel em `/painel`. Ou, por container:
+
+```bash
+docker build -t jurisflow-app app/
+docker run -p 8080:8080 -e N8N_PUBLIC_URL=... -e JURISFLOW_WEBHOOK_SECRET=... jurisflow-app
+```
+
+Não há login, e portanto não há credencial de teste a fornecer: o formulário é público por
+natureza e o painel serve apenas agregados. O raciocínio está na
+[ADR-007](docs/adr/ADR-007-aplicacao-web-com-ponte-para-o-n8n.md).
+
+Para exercitar sem inventar dados, use o CPF `111.444.777-35`, que é válido pelo dígito
+verificador e não pertence a ninguém, e as descrições de
+[`docs/exemplos-intakes.md`](docs/exemplos-intakes.md).
 
 ## Testes
 
@@ -326,6 +386,40 @@ endereços que a expressão regular não alcança. Ataca o risco residual declar
 
 **Fallback de provedor**, para o qual o [`.env.example`](.env.example) já reserva
 `ANTHROPIC_API_KEY`. Melhora resiliência, não custo nem latência.
+
+## Limitações conhecidas
+
+Declaradas porque reconhecer o que não funciona vale mais do que esconder.
+
+**A sanitização não remove identificadores indiretos.** A `sanitizarTexto` tira CPF, CNPJ,
+e-mail e telefone por expressão regular, e não tira nome próprio, endereço nem nome de
+empregador. Um relato como *"fui demitida da Padaria do Seu Jorge, em Macapá"* chega ao
+provedor com o contexto intacto. O limite está na seção 5 do
+[mapa de dados](docs/lgpd/mapa-dados-pessoais.md), e a mitigação por reconhecimento de
+entidades nomeadas é candidata registrada, não aplicada.
+
+**A qualidade da classificação foi medida sobre doze descrições.** O acerto de 100% vale para
+um corpus pequeno e inequívoco. O caso ambíguo — o relato que admite duas áreas — não aparece
+em volume suficiente para medir, e é exatamente onde um classificador erra. A taxa de revisão
+manual é o indicador que acusaria, e ela precisa de tráfego real.
+
+**As medições vêm de carga sintética.** Latência, custo e volume foram levantados com 200
+intakes gerados por script, de uma máquina, numa janela de pouco mais de um minuto. Não
+reproduzem o padrão real de 2.500 intakes diários concentrados em horário comercial.
+
+**O painel não tem autenticação.** É decisão consciente, discutida na
+[ADR-007](docs/adr/ADR-007-aplicacao-web-com-ponte-para-o-n8n.md): ele serve apenas agregados,
+e um login improvisado seria pior do que nenhum. Se um dia mostrar caso individual, a decisão
+se inverte.
+
+**Os dois ambientes estão na mesma plataforma.** A [ADR-005](docs/adr/ADR-005-railway-nos-dois-ambientes.md)
+recuperou a paridade e, com isso, criou um ponto único de falha. O projeto já perdeu instância
+duas vezes por motivo de plataforma, e a terceira derrubaria os dois ambientes juntos.
+
+**A entrega no Slack não tem reprocessamento.** Falha de entrega é registrada com
+`causa_falha: 'slack'` e dispara alerta, mas o caso não é reenviado automaticamente: alguém
+precisa olhar o canal de operação e agir. É o modo de falha mais grave do sistema, porque o
+formulário já respondeu sucesso ao cliente.
 
 ## Troubleshooting
 

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JurisFlow — Painel de operação</title>
+<meta name="description" content="As cinco métricas do JurisFlow: latência, custo, erro, volume e qualidade.">
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="/static/estilo.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>⚖️</text></svg>">
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-interno">
+    <a class="marca" href="/">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#7d1935" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3v18M7 21h10M5 7h14M5 7l-2.5 6a3.5 3.5 0 0 0 5 0L5 7Zm14 0-2.5 6a3.5 3.5 0 0 0 5 0L19 7Z"/>
+      </svg>
+      <span>JurisFlow<small>Triagem de casos</small></span>
+    </a>
+    <nav class="nav">
+      <a href="/">Enviar caso</a>
+      <a href="/painel" class="ativo">Painel</a>
+    </nav>
+  </div>
+</header>
+
+<main class="conteudo">
+  <h1>Painel de operação</h1>
+  <p class="subtitulo">
+    As cinco métricas essenciais, lidas da trilha de auditoria. Janela das últimas 24 horas.
+    Nenhum dado pessoal aparece aqui: apenas agregados e contagens.
+  </p>
+
+  <div class="placas" id="placas">
+    <div class="placa"><div class="rotulo">Volume</div><div class="valor esqueleto">000</div><div class="nota">intakes em 24 h</div></div>
+    <div class="placa"><div class="rotulo">Latência p95</div><div class="valor esqueleto">000</div><div class="nota">SLA de 60 s</div></div>
+    <div class="placa"><div class="rotulo">Taxa de erro</div><div class="valor esqueleto">000</div><div class="nota">limite de 1 %</div></div>
+    <div class="placa"><div class="rotulo">Revisão manual</div><div class="valor esqueleto">000</div><div class="nota">limite de 15 %</div></div>
+    <div class="placa"><div class="rotulo">Custo</div><div class="valor esqueleto">000</div><div class="nota">em 24 h</div></div>
+  </div>
+
+  <div class="grade-2">
+    <section class="cartao">
+      <h2>Onde o tempo é gasto</h2>
+      <div id="spans"><p class="nota">Carregando…</p></div>
+    </section>
+
+    <section class="cartao">
+      <h2>Distribuição por área</h2>
+      <div id="areas"><p class="nota">Carregando…</p></div>
+    </section>
+  </div>
+
+  <section class="cartao" style="margin-top:18px">
+    <h2>Retenção de dados — últimas purgas</h2>
+    <p class="nota" style="margin-top:-8px;margin-bottom:14px">
+      Execuções com erro guardam o relato por 72 horas; a trilha pseudonimizada, por 12 meses.
+      Zero removido significa que a barreira anterior cumpriu a sua parte.
+    </p>
+    <div id="purgas"><p class="nota">Carregando…</p></div>
+  </section>
+
+  <p class="rodape" id="rodape">
+    Fonte: <code>jurisflow_trilha_auditoria</code> e <code>jurisflow_trace_span</code>, no Postgres.
+    Relatório e painel leem da mesma consulta, de propósito.
+  </p>
+</main>
+
+<script src="/static/painel.js"></script>
+</body>
+</html>
