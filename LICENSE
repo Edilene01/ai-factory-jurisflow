@@ -24,8 +24,15 @@ SOFTWARE.
 
 Nota de procedência
 
-A licença acima cobre o trabalho feito neste repositório. O material herdado do
-protótipo que deu origem ao projeto está preservado em `docs/heranca/`, sem
-alteração, e pertence aos seus autores originais. A auditoria da adoção, em
-`docs/auditoria-prototipo.md`, registra o que foi recebido e o que foi
-reescrito.
+A licença acima cobre o trabalho feito neste repositório.
+
+O protótipo que deu origem ao projeto foi fornecido como material da disciplina
+AI Factory: Build, Deploy and Showcase, de autoria do professor Wellington
+Monteiro, e o arquivo de licença original trazia o nome dele. O material
+herdado está preservado sem alteração em `docs/heranca/`, e a auditoria da
+adoção, em `docs/auditoria-prototipo.md`, registra achado por achado o que foi
+recebido e o que foi reescrito.
+
+A troca do titular reflete a autoria do que está aqui: o workflow evoluído, a
+aplicação web, a documentação, os testes e o esquema de dados. O crédito pelo
+ponto de partida permanece onde é devido.

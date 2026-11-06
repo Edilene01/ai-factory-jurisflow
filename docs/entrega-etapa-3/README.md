@@ -51,7 +51,7 @@ na análise crítica.
 | Aplicação respondendo | `curl https://ai-factory-jurisflow-production.up.railway.app/healthz` deve dar `n8n_configurado: true` |
 | Nenhum segredo no repositório | `gitleaks detect --source . --verbose` |
 | Arquivos `.txt` com chave fora da árvore do projeto | Eles estão na pasta acima e aparecem em captura de tela |
-| Nenhum nome de terceiro no repositório | `grep -ri "copyright" .` deve mostrar só o seu nome. O LICENSE vinha com o nome de outra pessoa, resíduo do material de partida, corrigido em 06/11 |
+| Titular do copyright | `grep -ri "copyright" .` deve mostrar o seu nome. O LICENSE vinha com o nome do professor, autor do material de partida, corrigido em 06/11 com nota de procedência que preserva o crédito dele |
 | Título do vídeo exato | `[AI Factory] Pitch - JurisFlow - Edilene Chagas Faria` |
 | Duração entre 4:30 e 5:30 | Conferir no YouTube depois de publicar |
 | Legendas verificadas | O YouTube gera automático e erra nomes próprios; revise "JurisFlow" e "Edilene" |
