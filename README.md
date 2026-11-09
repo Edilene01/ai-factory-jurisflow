@@ -4,7 +4,8 @@ Triagem automática de formulários de intake jurídico: recebe o caso, classifi
 urgência, devolve um protocolo ao cliente e entrega o caso ao time responsável no Slack,
 com a identidade do solicitante mascarada.
 
-**URL pública:** https://n8n-production-81314.up.railway.app/webhook/intake
+**Aplicação:** https://ai-factory-jurisflow-production.up.railway.app · [formulário](https://ai-factory-jurisflow-production.up.railway.app/) · [painel de operação](https://ai-factory-jurisflow-production.up.railway.app/painel)
+**API de intake:** `https://n8n-production-81314.up.railway.app/webhook/intake`
 *A instância anterior, no n8n Cloud, deixou de existir em outubro de 2026. A [ADR-005](docs/adr/ADR-005-railway-nos-dois-ambientes.md) registra por que produção passou para o Railway.*
 **Estado da entrega:** ver [`docs/estado-da-entrega.md`](docs/estado-da-entrega.md), que registra o que está verificado e o que ainda não está
 **README v1.0** · **Versão:** v1.0.0 · [CHANGELOG](CHANGELOG.md) · [Releases](../../releases)
@@ -46,13 +47,15 @@ na branch principal. O caminho de uma requisição:
 
 ## A aplicação
 
+**No ar em https://ai-factory-jurisflow-production.up.railway.app**, sem login: o formulário é público por natureza e o painel serve apenas agregados.
+
 Duas telas, servidas por um backend próprio em FastAPI.
 
 | Captura | O que mostra |
 |---|---|
-| ![Formulário de intake](docs/capturas/01-intake-formulario.jpg) | **`/` — Enviar caso.** O formulário que a pessoa que procura o escritório usa. O aviso de privacidade declara a base legal e o que é removido antes da classificação |
+| ![Formulário de intake](docs/capturas/01-intake-formulario.jpg) | **`/`, enviar caso.** O formulário que a pessoa que procura o escritório usa. O aviso de privacidade declara a base legal e o que é removido antes da classificação |
 | ![Resultado da triagem](docs/capturas/02-intake-resultado.jpg) | **Resultado.** Protocolo, área e urgência em segundos. A urgência vem etiquetada por cor |
-| ![Painel de operação](docs/capturas/03-painel-operacao.jpg) | **`/painel` — Operação.** As cinco métricas, latência por etapa, distribuição por área e o registro das purgas de retenção |
+| ![Painel de operação](docs/capturas/03-painel-operacao.jpg) | **`/painel`, operação.** As cinco métricas, latência por etapa, distribuição por área e o registro das purgas de retenção |
 | ![Limite de taxa](docs/capturas/04-limite-de-taxa.jpg) | **Limite de taxa.** Cada intake custa uma chamada de LLM; o teto é de 5 por minuto por IP |
 
 O backend existe por uma razão concreta, e não por gosto: o webhook do n8n exige o header
@@ -237,7 +240,7 @@ pela segunda. É por isso que as duas existem.
 
 ### Dashboard
 
-**Infraestrutura:** [painel do serviço `n8n` no Railway](https://railway.com/project/92a12c78-e8f6-43c9-ba22-029f4218931f/service/52a38610-d05a-4751-87c0-315712d0b94e?environmentId=e9389aad-f152-4874-8782-8f3bb8e88849) — CPU, memória, rede, disco do
+**Infraestrutura:** [painel do serviço `n8n` no Railway](https://railway.com/project/92a12c78-e8f6-43c9-ba22-029f4218931f/service/52a38610-d05a-4751-87c0-315712d0b94e?environmentId=e9389aad-f152-4874-8782-8f3bb8e88849): CPU, memória, rede, disco do
 volume e contagem de requisições HTTP por faixa de status. Exige login na conta que hospeda o
 projeto, e por isso os números medidos estão reproduzidos abaixo.
 
@@ -331,7 +334,7 @@ plataforma, no canal `#juris-ops`; o que muda é a urgência com que interrompe.
 | P3 | Tendência que merece olhar | Revisão semanal |
 
 **Implementado hoje:** o A-10, em [`.github/workflows/retencao.yml`](.github/workflows/retencao.yml).
-Dispara em P2 quando a purga de retenção removeu alguma coisa — o que significa que a via do
+Dispara em P2 quando a purga de retenção removeu alguma coisa, o que significa que a via do
 n8n não rodou e há dado pessoal além do prazo declarado.
 
 ### Trace e spans
@@ -344,7 +347,7 @@ spans, de `recepcao` a `entrega_slack`, no esquema de
 
 ## Otimizações
 
-### 001 — Compressão do system prompt · **aplicada e medida**
+### 001 · Compressão do system prompt · **aplicada e medida**
 
 A linha de base mostrou que **90% dos tokens de entrada eram o prompt fixo**, reenviado a cada
 requisição: 328 tokens por intake, dos quais a descrição do caso respondia por ~30. O prompt
@@ -361,13 +364,13 @@ Duas corridas consecutivas de 200 intakes, mesma semente, mesmo corpus:
 | Taxa de erro | 0% | 0% | — |
 
 **O trade-off, sem maquiagem.** Custo e latência melhoraram juntos, porque menos tokens de
-entrada significam menos cobrança e menos tempo — não houve sacrifício de um pelo outro. O
+entrada significam menos cobrança e menos tempo, e não houve sacrifício de um pelo outro. O
 risco está na qualidade, e a medição não o cobre bem: o corpus tem doze descrições
 inequívocas, e o lugar onde um prompt mais curto cobraria o preço é o caso ambíguo. A medição
 prova que não piorou nos casos fáceis, e nada diz sobre os difíceis.
 
 E os 21% valem **noventa centavos por mês** a 2.500 intakes diários, de US$ 4,35 para US$ 3,43.
-O que justifica a mudança é o conjunto — custo, latência e manutenibilidade — e não a economia
+O que justifica a mudança é o conjunto, custo, latência e manutenibilidade, e não a economia
 isolada.
 
 Análise completa, incluindo a otimização que foi **descartada por ser mensurável de forma
@@ -387,6 +390,24 @@ endereços que a expressão regular não alcança. Ataca o risco residual declar
 **Fallback de provedor**, para o qual o [`.env.example`](.env.example) já reserva
 `ANTHROPIC_API_KEY`. Melhora resiliência, não custo nem latência.
 
+## Evolução proposta: adoção fora da empresa fictícia
+
+A JurisFlow não existe. O problema que ela descreve, sim, e ele é o mesmo de qualquer
+escritório pequeno que recebe formulário de contato.
+
+Está desenhada a adoção do sistema em atendimento real, no portal de um escritório de
+advocacia: servidor e e-mail corporativo já contratados, seis nós de Slack trocados por um de
+e-mail, botão de WhatsApp acionado pelo cliente com o protocolo já escrito, as cinco áreas
+fictícias trocadas pelas áreas reais de atuação e, o que mais pesa, os documentos de LGPD
+reescritos com uma controladora de carne e osso.
+
+O entregável avaliado **não se move**: o briefing restringe a hospedagem a Render, Railway,
+Fly.io ou n8n Cloud, e este repositório fica congelado onde está. A versão do escritório nasce
+de um espelho que preserva histórico, tags e ADRs, em repositório separado.
+
+Desenho completo, custos, ordem de execução e a lacuna de backup que precisa ser fechada antes
+do primeiro caso real: [`docs/evolucao/001-jurisflow-no-portal-do-escritorio.md`](docs/evolucao/001-jurisflow-no-portal-do-escritorio.md).
+
 ## Limitações conhecidas
 
 Declaradas porque reconhecer o que não funciona vale mais do que esconder.
@@ -399,7 +420,7 @@ provedor com o contexto intacto. O limite está na seção 5 do
 entidades nomeadas é candidata registrada, não aplicada.
 
 **A qualidade da classificação foi medida sobre doze descrições.** O acerto de 100% vale para
-um corpus pequeno e inequívoco. O caso ambíguo — o relato que admite duas áreas — não aparece
+um corpus pequeno e inequívoco. O caso ambíguo, o relato que admite duas áreas, não aparece
 em volume suficiente para medir, e é exatamente onde um classificador erra. A taxa de revisão
 manual é o indicador que acusaria, e ela precisa de tráfego real.
 
@@ -467,12 +488,12 @@ ser emitida. É o que motivou a [ADR-005](docs/adr/ADR-005-railway-nos-dois-ambi
 
 Veja o `motivo_revisao`, que a resposta do webhook agora devolve. Dois casos já aconteceram:
 
-*"sem objeto JSON reconhecivel | recebido: {"message":"Welcome to the OpenAI API!..."}"* — o
+*"sem objeto JSON reconhecivel | recebido: {"message":"Welcome to the OpenAI API!..."}"*: o
 nó estava chamando a **raiz da API**, e não o endpoint de *chat completions*. Era o nó legado
 `n8n-nodes-base.openAi` typeVersion 1, que quebra no n8n 2.40.5. Substituído por um
 HTTP Request, que não muda de forma entre versões.
 
-*"provedor retornou erro: Incorrect API key provided"* — a credencial `OpenAI JurisFlow` na
+*"provedor retornou erro: Incorrect API key provided"*: a credencial `OpenAI JurisFlow` na
 instância tem valor inválido. Chave da OpenAI começa com `sk-`; se não começar, foi colado o
 valor errado. Corrija na interface do n8n.
 
