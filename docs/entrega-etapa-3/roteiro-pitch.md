@@ -29,7 +29,7 @@ mostre a pasta.
 
 1. https://ai-factory-jurisflow-production.up.railway.app/ , o formulário, campos vazios
 2. https://ai-factory-jurisflow-production.up.railway.app/painel , o painel
-3. O Slack, no canal `#juris-trabalhista`
+3. O Slack, no canal `#juris-consumidor`, que é onde o caso da demonstração cai
 
 **Grave uma demo de backup antes.** A rubrica pede demo gravada de reserva mesmo que não seja
 usada, e ela pesa junto com os 20% da aplicação no ar. Dois minutos de tela bastam.
