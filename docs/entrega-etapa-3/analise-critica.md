@@ -88,14 +88,9 @@ incorporadas aos contratos, pendência contratual registrada em
 
 ## Parte C: visão de futuro e aprendizados
 
-> **Esta parte é sua, e só sua.** O enunciado da Etapa 3 determina que ela seja 100% autoral,
-> sem nenhum uso de IA. O material de apoio, com as perguntas a responder e os fatos do
-> projeto que você talvez queira usar, está em
-> [`parte-c-material-para-voce-escrever.md`](parte-c-material-para-voce-escrever.md).
->
-> **Espaço disponível: cerca de 350 a 400 palavras**, que é o que falta para o documento fechar
-> em duas páginas. Dá para responder as quatro perguntas com folga, desde que as três propostas
-> de evolução venham em uma ou duas linhas cada. O resto do espaço vale mais na reflexão, que é
-> a parte que o avaliador não consegue prever.
->
-> **Apague este bloco e escreva aqui.**
+Professor, como de costume, as suas propostas de atividades das HPs são muito desafiadoras para mim! Eu esperava conseguir rodar suave as etapas 1 e 2, além de criar o meu vídeo de pitch usando alguma ferramenta de geração de vídeo com o meu avatar de IA.
+Mas não saiu como o planejado: a HP1 entreguei quase no prazo fatal e perdi o prazo para postar a HP2 (enviei já no prazo da recuperação)...
+Não curti muito trabalhar em um protótipo herdado (principalmente porque estava cheio de problemas e bugs, pra variar). Justamente nesse ponto, a auditoria do protótipo encontrou 25 achados, seis críticos, e foi escrita antes de qualquer código. A plataforma mudou três vezes: ADR-002 em 18/09 escolhe Railway nos dois ambientes, ADR-003 em 21/09 move produção para o n8n Cloud, ADR-004 em 19/10 manda reconstruir no n8n Cloud, e a ADR-005 no mesmo dia volta para o Railway. A ADR-004 foi substituída no dia em que nasceu. O impedimento que derrubou a ADR-004, a conta trial não emitir chave de API, só apareceu depois da decisão tomada. A instância de produção sumiu duas vezes, e o banco voltou vazio uma delas. Não havia rotina de backup, e ainda não há (a observabilidade foi desenhada na Etapa 2, e o primeiro bug que ela expôs existia desde o protótipo).
+Ainda sobre essa atividade: aprendi um montão de coisas que não sabia e teve coisas que custaram caro por motivos bestas, como o `HTTP 400 Bad Request` sem corpo, o `percentile_cont` que não aceita `OVER()` no PostgreSQL e tantas outras.
+A experiência nesta atividade me ajudou a evoluir no lado "mão na massa" e serviu para evoluir vários microsserviços no meu portal, inclusive levando o desse projeto (JurisFlow) pra lá, com alguns ajustes: não uso o slack, mas o whatsApp e o e-mail corporativo.
+Mais detalhes, mostrarei no vídeo da atividade. Abraço!!!
